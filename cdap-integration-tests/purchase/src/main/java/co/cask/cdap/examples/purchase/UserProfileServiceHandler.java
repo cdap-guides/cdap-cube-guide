@@ -22,7 +22,6 @@ import co.cask.cdap.api.service.http.HttpServiceRequest;
 import co.cask.cdap.api.service.http.HttpServiceResponder;
 import com.google.common.base.Charsets;
 import com.google.gson.Gson;
-import org.jboss.netty.buffer.ChannelBuffers;
 
 import java.net.HttpURLConnection;
 import javax.ws.rs.GET;
@@ -60,7 +59,7 @@ public final class UserProfileServiceHandler extends AbstractHttpServiceHandler 
   @POST
   public void setUserProfile(HttpServiceRequest request, HttpServiceResponder responder) {
     try {
-      String encodedUserProfile = new String(ChannelBuffers.copiedBuffer(request.getContent()).array());
+      String encodedUserProfile = Bytes.toString(request.getContent());
       UserProfile userProfile = GSON.fromJson(encodedUserProfile, UserProfile.class);
       userProfiles.write(userProfile.getId(), GSON.toJson(userProfile));
       responder.sendStatus(HttpURLConnection.HTTP_OK);

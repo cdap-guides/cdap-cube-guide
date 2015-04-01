@@ -7,5 +7,5 @@ mvn test -DargLine="-DinstanceUri=<YOUR-INSTANCE-URI>"
 e.g.
 
 ```
-mvn test -DargLine="-DinstanceUri=http://localhost:10000"
+mvn test -DargLine="-DinstanceUri=http://localhost:10000/default"
 ```
