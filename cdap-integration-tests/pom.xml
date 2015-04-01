@@ -12,6 +12,9 @@
     <module>purchase</module>
   </modules>
 
+  <properties>
+    <hadoop.version>2.3.0</hadoop.version>
+  </properties>
 
   <dependencyManagement>
     <dependencies>
@@ -19,6 +22,31 @@
         <groupId>co.cask.cdap</groupId>
         <artifactId>cdap-api</artifactId>
         <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>co.cask.common</groupId>
+        <artifactId>common-http</artifactId>
+        <version>0.6.1</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-mapreduce-client-app</artifactId>
+        <version>${hadoop.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-mapreduce-client-core</artifactId>
+        <version>${hadoop.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-common</artifactId>
+        <version>${hadoop.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>co.cask.http</groupId>
+        <artifactId>netty-http</artifactId>
+        <version>0.11.0</version>
       </dependency>
       <dependency>
         <groupId>co.cask.cdap</groupId>

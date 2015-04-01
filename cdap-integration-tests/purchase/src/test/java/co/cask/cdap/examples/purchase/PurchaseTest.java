@@ -1,6 +1,7 @@
 package co.cask.cdap.examples.purchase;
 
 import co.cask.cdap.api.metrics.RuntimeMetrics;
+import co.cask.cdap.proto.ProgramType;
 import co.cask.cdap.test.ApplicationManager;
 import co.cask.cdap.test.FlowManager;
 import co.cask.cdap.test.IntegrationTestBase;
@@ -33,6 +34,9 @@ public class PurchaseTest extends IntegrationTestBase {
     stream.send("Joe bought 3 dogs for $83");
     stream.send("Bob bought 8 pineapples for $1");
     stream.send("Joe bought 9 cats for $382");
+
+    getProgramClient().waitForStatus(PurchaseApp.APP_NAME, ProgramType.FLOW, "PurchaseFlow",
+                                     "RUNNING", 30, TimeUnit.SECONDS);
 
     RuntimeMetrics collectorMetrics = flow.getFlowletMetrics("collector");
     collectorMetrics.waitFor("system.process.events.processed", 3, 15, TimeUnit.SECONDS);
