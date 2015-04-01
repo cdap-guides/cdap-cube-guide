@@ -14,6 +14,8 @@ import co.cask.common.http.HttpResponse;
 import com.google.gson.Gson;
 import org.junit.Assert;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URL;
 import java.util.concurrent.TimeUnit;
@@ -24,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 public class PurchaseTest extends IntegrationTestBase {
 
   private static final Gson GSON = new Gson();
+  private static final Logger LOG = LoggerFactory.getLogger(PurchaseTest.class);
 
   @Test
   public void test() throws Exception {
@@ -35,8 +38,7 @@ public class PurchaseTest extends IntegrationTestBase {
     stream.send("Bob bought 8 pineapples for $1");
     stream.send("Joe bought 9 cats for $382");
 
-    getProgramClient().waitForStatus(PurchaseApp.APP_NAME, ProgramType.FLOW, "PurchaseFlow",
-                                     "RUNNING", 30, TimeUnit.SECONDS);
+    getProgramClient().waitForStatus(PurchaseApp.APP_NAME, ProgramType.FLOW, "PurchaseFlow", "RUNNING", 30, TimeUnit.SECONDS);
 
     RuntimeMetrics collectorMetrics = flow.getFlowletMetrics("collector");
     collectorMetrics.waitFor("system.process.events.processed", 3, 30, TimeUnit.SECONDS);
@@ -49,7 +51,10 @@ public class PurchaseTest extends IntegrationTestBase {
     URL requestURL = new URL(serviceURL.toString() + "/history/Joe");
     HttpRequest request = HttpRequest.get(requestURL).build();
 
-    HttpResponse response = HttpRequests.execute(request);
+    getProgramClient().waitForStatus(PurchaseApp.APP_NAME, ProgramType.SERVICE, "PurchaseHistoryService",
+                                     "RUNNING", 30, TimeUnit.SECONDS);
+
+    HttpResponse response = RetryingHttpRequests.execute(request);
     Assert.assertEquals(200, response.getResponseCode());
     PurchaseHistory history = GSON.fromJson(response.getResponseBodyAsString(), PurchaseHistory.class);
 
