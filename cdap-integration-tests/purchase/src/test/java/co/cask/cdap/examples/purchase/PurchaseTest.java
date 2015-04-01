@@ -39,7 +39,7 @@ public class PurchaseTest extends IntegrationTestBase {
                                      "RUNNING", 30, TimeUnit.SECONDS);
 
     RuntimeMetrics collectorMetrics = flow.getFlowletMetrics("collector");
-    collectorMetrics.waitFor("system.process.events.processed", 3, 15, TimeUnit.SECONDS);
+    collectorMetrics.waitFor("system.process.events.processed", 3, 30, TimeUnit.SECONDS);
 
     MapReduceManager mapreduce = app.startMapReduce("PurchaseHistoryBuilder");
     mapreduce.waitForFinish(2, TimeUnit.MINUTES);
