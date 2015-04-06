@@ -31,7 +31,7 @@ public class MetricsBenchmarkTest extends TestBase {
   @Test
   public void test() throws TimeoutException, InterruptedException, IOException {
     ApplicationManager app = deployApplication(MetricsBenchmark.class);
-    app.startWorker(MetricsBenchmark.MetricsEmitter.NAME);
-    app.startService(MetricsBenchmark.BenchmarkService.NAME, ImmutableMap.of("hostname", "localhost"));
+    app.startWorker(MetricsEmitter.NAME);
+    app.startService(BenchmarkService.NAME, ImmutableMap.of("hostname", "localhost"));
   }
 }
