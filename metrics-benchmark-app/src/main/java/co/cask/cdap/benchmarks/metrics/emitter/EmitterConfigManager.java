@@ -1,13 +1,11 @@
 package co.cask.cdap.benchmarks.metrics.emitter;
 
-import co.cask.cdap.benchmarks.metrics.emitter.EmitterConfig;
-
 /**
  *
  */
 public abstract class EmitterConfigManager {
 
-  private static final EmitterConfig DEFAULT_EMITTER_CONFIG = new EmitterConfig(1, 1000);
+  private static final EmitterConfig DEFAULT_EMITTER_CONFIG = new EmitterConfig(10);
 
   /**
    * How long to wait between refreshing {@link EmitterConfig}, in milliseconds.
@@ -19,25 +17,20 @@ public abstract class EmitterConfigManager {
 
   protected abstract EmitterConfig fetchConfig(String key);
 
-  public EmitterConfig getConfig(String key) {
-    return fetchConfigWithDefaults(key);
+  public EmitterConfig getConfig() {
+    return fetchConfigWithDefaults();
   }
 
-  public EmitterConfig getCachedConfig(String key, long currentTime) {
+  public EmitterConfig getCachedConfig(long currentTime) {
     if (currentTime - timeLastRefreshedDelay >= configRefreshDelay) {
-      config = getConfig(key);
+      config = getConfig();
       timeLastRefreshedDelay = currentTime;
     }
     return config;
   }
 
-  private EmitterConfig fetchConfigWithDefaults(String key) {
-    EmitterConfig instanceConfig = fetchConfig(key);
-    if (instanceConfig != null) {
-      return instanceConfig;
-    }
-
-    EmitterConfig defaultConfig = fetchConfig(key);
+  private EmitterConfig fetchConfigWithDefaults() {
+    EmitterConfig defaultConfig = fetchConfig("default");
     if (defaultConfig != null) {
       return defaultConfig;
     }

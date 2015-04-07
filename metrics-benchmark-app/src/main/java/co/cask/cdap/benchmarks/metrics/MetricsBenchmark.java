@@ -18,16 +18,12 @@ package co.cask.cdap.benchmarks.metrics;
 
 import co.cask.cdap.api.app.AbstractApplication;
 import co.cask.cdap.api.data.schema.UnsupportedTypeException;
+import co.cask.cdap.api.data.stream.Stream;
 import co.cask.cdap.api.dataset.lib.ObjectStores;
 import co.cask.cdap.benchmarks.metrics.emitter.EmitterConfig;
 
 /**
  * Application for benchmarking metrics.
- *
- * <p>
- *   {@link MetricsEmitter}: emits metrics.
- *   {@link BenchmarkService}: set/get emitter configs and get benchmark report/results
- * </p>
  */
 public class MetricsBenchmark extends AbstractApplication {
 
@@ -35,7 +31,8 @@ public class MetricsBenchmark extends AbstractApplication {
   public void configure() {
     setName("MetricsBenchmark");
     setDescription("A metrics benchmark application");
-    addWorker(new MetricsEmitter());
+    addStream(new Stream("foo"));
+    addFlow(new MetricsEmitterFlow());
     addService(new BenchmarkService());
 
     try {

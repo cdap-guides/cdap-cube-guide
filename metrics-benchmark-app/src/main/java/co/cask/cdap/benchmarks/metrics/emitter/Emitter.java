@@ -6,5 +6,5 @@ import co.cask.cdap.api.metrics.Metrics;
  *
  */
 public interface Emitter {
-  void emit(Metrics metrics, long currentTime, String emitterName, EmitterConfig config);
+  void emit(Metrics metrics, long currentTime, int instanceId, EmitterConfig config);
 }

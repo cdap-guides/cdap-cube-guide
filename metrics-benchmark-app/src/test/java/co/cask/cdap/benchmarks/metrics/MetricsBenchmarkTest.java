@@ -15,23 +15,16 @@
  */
 package co.cask.cdap.benchmarks.metrics;
 
-import co.cask.cdap.test.ApplicationManager;
 import co.cask.cdap.test.TestBase;
-import com.google.common.collect.ImmutableMap;
-import org.junit.Test;
-
-import java.io.IOException;
-import java.util.concurrent.TimeoutException;
 
 /**
  * Test for {@link MetricsBenchmark}.
  */
 public class MetricsBenchmarkTest extends TestBase {
-
-  @Test
-  public void test() throws TimeoutException, InterruptedException, IOException {
-    ApplicationManager app = deployApplication(MetricsBenchmark.class);
-    app.startWorker(MetricsEmitter.NAME);
-    app.startService(BenchmarkService.NAME, ImmutableMap.of("hostname", "localhost"));
-  }
+//  @Test
+//  public void test() throws TimeoutException, InterruptedException, IOException {
+//    ApplicationManager app = deployApplication(MetricsBenchmark.class);
+//    app.startWorker(MetricsEmitter.NAME);
+//    app.startService(BenchmarkService.NAME, ImmutableMap.of("hostname", "localhost"));
+//  }
 }

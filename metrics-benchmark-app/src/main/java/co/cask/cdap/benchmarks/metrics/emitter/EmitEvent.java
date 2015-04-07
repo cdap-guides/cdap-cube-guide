@@ -3,11 +3,11 @@ package co.cask.cdap.benchmarks.metrics.emitter;
 /**
  *
  */
-public class EmitterConfig {
+public class EmitEvent {
 
   private final int batchSize;
 
-  public EmitterConfig(int batchSize) {
+  public EmitEvent(int batchSize) {
     this.batchSize = batchSize;
   }
 

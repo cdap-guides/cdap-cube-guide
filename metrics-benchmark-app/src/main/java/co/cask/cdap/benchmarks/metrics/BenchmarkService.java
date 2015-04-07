@@ -65,30 +65,14 @@ public class BenchmarkService extends AbstractService {
     }
 
     @GET
-    @Path("config/emitter/{emitter-id}")
-    public void getEmitter(HttpServiceRequest request, HttpServiceResponder responder,
-                           @PathParam("emitter-id") String emitterId) {
-      responder.sendJson(ImmutableMap.of("delay", "emitter-" + configManager.getConfig(emitterId)));
+    @Path("config")
+    public void getConfig(HttpServiceRequest request, HttpServiceResponder responder) {
+      responder.sendJson(ImmutableMap.of("delay", configManager.getConfig()));
     }
 
     @PUT
-    @Path("config/emitter/{emitter-id}")
-    public void setEmitter(HttpServiceRequest request, HttpServiceResponder responder,
-                           @PathParam("emitter-id") String emitterId) {
-      EmitterConfig input = GSON.fromJson(Bytes.toString(request.getContent()), EmitterConfig.class);
-      configs.write("emitter-" + emitterId, input);
-      responder.sendStatus(200);
-    }
-
-    @GET
-    @Path("config/default")
-    public void getDefault(HttpServiceRequest request, HttpServiceResponder responder) {
-      responder.sendJson(ImmutableMap.of("delay", configManager.getConfig("default")));
-    }
-
-    @PUT
-    @Path("config/default")
-    public void setDefault(HttpServiceRequest request, HttpServiceResponder responder) {
+    @Path("config")
+    public void setConfig(HttpServiceRequest request, HttpServiceResponder responder) {
       EmitterConfig input = GSON.fromJson(Bytes.toString(request.getContent()), EmitterConfig.class);
       configs.write("default", input);
       responder.sendStatus(200);
@@ -104,6 +88,7 @@ public class BenchmarkService extends AbstractService {
 
     @Override
     public void initialize(HttpServiceContext context) throws Exception {
+      super.initialize(context);
       this.hostname = context.getRuntimeArguments().get("hostname");
     }
 
