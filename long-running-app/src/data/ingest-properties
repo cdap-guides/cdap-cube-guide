@@ -1,0 +1,7 @@
+instanceUri=localhost:10000
+events=10
+payload=2000
+concurrency=10
+streamName=eventStream
+accessToken=Ag5zaGFua2FyAL7/rNOWU76PkZSbU7bF7pAGQH+2oOXKPEy7ksKMrADMGHOFZvo9CAXoG3CYyXSPyBx8
+timeStampFilePath=/Users/shankar/project/spikes/long-running-app/src/data/timestamp
