@@ -118,7 +118,7 @@ the application name, our WebAnalyticsApp adds a new
 
 Then, the application configures a Cube dataset to compute and store 
 aggregations for combinations of dimensions (tags). Let’s take a closer 
-look at properties that are used to configure the Cube dataset::
+look at properties that are used to configure the Cube dataset:
 
 .. code:: java
 
@@ -152,21 +152,21 @@ look at these two.
 
 .. code:: java
 
-public class CubeWriterFlow implements Flow {
-  static final String FLOW_NAME = "CubeWriterFlow";
-
-  @Override
-  public FlowSpecification configure() {
-    return FlowSpecification.Builder.with()
-      .setName(FLOW_NAME)
-      .setDescription("Reads logs from stream and writes them to a Cube dataset")
-      .withFlowlets()
-        .add("writer", new CubeWriterFlowlet())
-      .connect()
-        .fromStream(WebAnalyticsApp.STREAM_NAME).to("writer")
-      .build();
+  public class CubeWriterFlow implements Flow {
+    static final String FLOW_NAME = "CubeWriterFlow";
+  
+    @Override
+    public FlowSpecification configure() {
+      return FlowSpecification.Builder.with()
+        .setName(FLOW_NAME)
+        .setDescription("Reads logs from stream and writes them to a Cube dataset")
+        .withFlowlets()
+          .add("writer", new CubeWriterFlowlet())
+        .connect()
+          .fromStream(WebAnalyticsApp.STREAM_NAME).to("writer")
+        .build();
+    }
   }
-}
 
 The Flow configures a single CubeWriterFlowlet to consume data from a Stream:
 
@@ -234,15 +234,15 @@ CubeService added to the application is constructed using a single handler:
 
 .. code:: java
 
-public final class CubeHandler extends AbstractCubeHttpHandler {
-  @UseDataSet(WebAnalyticsApp.CUBE_NAME)
-  private Cube cube;
-
-  @Override
-  protected Cube getCube() {
-    return cube;
+  public final class CubeHandler extends AbstractCubeHttpHandler {
+    @UseDataSet(WebAnalyticsApp.CUBE_NAME)
+    private Cube cube;
+  
+    @Override
+    protected Cube getCube() {
+      return cube;
+    }
   }
-}
 
 AbstractCubeHttpHandler that is provided out-of-the-box with CDAP handles basic 
 Cube methods, such as add, searchTag, searchMeasure and query while the subclass 
@@ -363,7 +363,7 @@ number of bytes sent for specific source ip per each browser type::
       "limit": 1000
   }
 
-One way of reading the query definition is the following analogy::
+One way of reading the query definition is the following analogy:
 
 .. code:: sql
 
