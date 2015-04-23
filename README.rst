@@ -1,6 +1,6 @@
-=============================
-Data Analytics with OLAP Cube
-=============================
+============================
+Data Analysis with OLAP Cube
+============================
 
 The `Cask Data Application Platform (CDAP) <http://cdap.io>`__ provides a 
 number of pre-packaged Datasets, which make it easy to store and retrieve 
@@ -148,7 +148,7 @@ CubeFacts from the StreamEvents and write them to a Cube, and CubeService that
 has a sinlge handler to provide HTTP API to query the Cube. Let’s take a closer 
 look at these two.
 
-*CubeWriterFlow*
+**CubeWriterFlow**
 
 .. code:: java
 
@@ -228,7 +228,7 @@ the parsed field values. It adds a two measurements to be computed by Cube in ev
 aggregation: the “count” for number of requests and “bytes.sent” for amount of data 
 sent.
 
-*CubeService*
+**CubeService**
 
 CubeService added to the application is constructed using a single handler:
 
@@ -301,7 +301,7 @@ Submit::
 
   $ curl -v -X POST -d @resources/search-first.json "http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/searchTag"
 
-The result will be the tag values of the first tags defined in all aggregations:
+The result will be the tag values of the first tags defined in all aggregations (shortened for readability):
 
 .. code:: json
 
@@ -318,7 +318,6 @@ The result will be the tag values of the first tags defined in all aggregations:
           "name": "ip",
           "value": "113.72.144.115"
       },
-      /* ... */
       {
           "name": "response_status",
           "value": "200"
@@ -343,7 +342,7 @@ To drill down further in tag hierarchy of aggregations, let’s refine the query
 
 Submit::
 
-  $ curl -v -X POST -d @resources/search-ip-browser.json "http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/searchTag"
+  $ curl -v -X POST -d @resources/search-ip.json "http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/searchTag"
 
 The result is the tag values of the next tag defined in Cube aggregations:
 
@@ -354,6 +353,19 @@ The result is the tag values of the next tag defined in Cube aggregations:
           "name": "browser",
           "value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2125.122 Safari/537.36"
       }
+  ]
+
+The Cube search API also allows to query for available measures via ``searchMeasure`` endpoint:
+
+  $ curl -v -X POST -d @resources/search-ip.json "http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/searchMeasure"
+
+The result contains all measurement names:
+
+.. code:: json
+
+  [
+      "bytes.sent",
+      "count"
   ]
 
 Now, let’s perform some data queries. Here’s how we can get timeseries for 
