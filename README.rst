@@ -281,7 +281,7 @@ provided by CubeService. For convenience, we’ve put the queries themselves
 into separate JSON files.
 
 Explore and Query Cube
-----------------------
+~~~~~~~~~~~~~~~~~~~~~~
 
 Many times, users may not know what data Cube contains and require some 
 exploration first to construct queries themselves. Let’s start by searching 
@@ -301,7 +301,9 @@ Submit::
 
   $ curl -v -X POST -d @resources/search-first.json "http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/searchTag"
 
-The result will be the tag values of the first tags defined in all aggregations::
+The result will be the tag values of the first tags defined in all aggregations:
+
+.. code:: json
 
   [
       {
@@ -327,7 +329,9 @@ The result will be the tag values of the first tags defined in all aggregations:
       }
   ]
 
-To drill down further in tag hierarchy of aggregations, let’s refine the query with specific tag value::
+To drill down further in tag hierarchy of aggregations, let’s refine the query with specific tag value:
+
+.. code:: json
 
   {
       "startTs": 1423370200,
@@ -341,7 +345,9 @@ Submit::
 
   $ curl -v -X POST -d @resources/search-ip-browser.json "http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/searchTag"
 
-The result is the tag values of the next tag defined in Cube aggregations::
+The result is the tag values of the next tag defined in Cube aggregations:
+
+.. code:: json
 
   [
       {
@@ -351,7 +357,9 @@ The result is the tag values of the next tag defined in Cube aggregations::
   ]
 
 Now, let’s perform some data queries. Here’s how we can get timeseries for 
-number of bytes sent for specific source ip per each browser type::
+number of bytes sent for specific source ip per each browser type:
+
+.. code:: json
 
   {
       "aggregation": "agg2",
@@ -381,7 +389,9 @@ The result is timeseries with one data point (if any available) per hour:
 
 TBD
 
-Query below will help to analyse the number of errors or invalid requests that web site handles::
+Query below will help to analyse the number of errors or invalid requests that web site handles:
+
+.. code:: json
 
   {
       "aggregation": "agg1",
@@ -399,7 +409,9 @@ Submit::
 
   $ curl -v -X POST -d @resources/query-response-status.json "http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/query"
 
-The result is multiple timeseries for each response status::
+The result is multiple timeseries for each response status:
+
+.. code:: json
 
   [
       {
@@ -469,73 +481,88 @@ The result is multiple timeseries for each response status::
   ]
 
 I we can see there are just couple 404s which is likely normal :)
+
 Changing Cube Configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-As application evolves we may need to change Cube aggregation configurations to support new queries or optimize existing ones. Let’s see how you can add an aggregation to an existing Cube.
+As application evolves we may need to change Cube aggregation configurations 
+to support new queries or optimize existing ones. Let’s see how you can add an 
+aggregation to an existing Cube.
 
-To change a configuration of the dataset you can use dataset system RESTful APIs. We want the changed configuration to include the following properties:
+To change a configuration of the dataset you can use 
+`dataset system RESTful APIs <http://docs.cask.co/cdap/current/en/reference-manual/http-restful-api/http-restful-api-v3/dataset.html>`__. 
+We want the changed configuration to include the following properties:
 
-{
-    "typeName":"co.cask.cdap.api.dataset.lib.cube.Cube",
-    "properties": {
-        "dataset.cube.resolutions":"1,60,3600",
-        "dataset.cube.aggregation.agg1.tags":"response_status",
-        "dataset.cube.aggregation.agg2.tags":"ip,browser",
-        "dataset.cube.aggregation.agg3.tags":"referrer",
-        "dataset.cube.aggregation.agg3.requiredTags":"referrer"
-    }
-}
+.. code:: json
 
-We added “agg3” that computes stats for referrers. Note the extra property that ends with requiredTags: it tells to only use this aggregation if required tag is present in a CubeFact. You may noticed in CubeWriterFlowlet that referrer field may be empty in a log entry. We don’t want to store extra aggregates for the fact where this is the case.
+  {
+      "typeName":"co.cask.cdap.api.dataset.lib.cube.Cube",
+      "properties": {
+          "dataset.cube.resolutions":"1,60,3600",
+          "dataset.cube.aggregation.agg1.tags":"response_status",
+          "dataset.cube.aggregation.agg2.tags":"ip,browser",
+          "dataset.cube.aggregation.agg3.tags":"referrer",
+          "dataset.cube.aggregation.agg3.requiredTags":"referrer"
+      }
+  }
 
-Let’s update dataset configuration and restart a flow and a service for that to take effect:
+We added “agg3” that computes stats for referrers. Note the extra property that ends 
+with requiredTags: it specifies to only use this aggregation if required tag is present in a CubeFact.
+You may noticed in CubeWriterFlowlet that referrer field may be empty in a log entry. 
+We don’t want to store extra aggregates for the fact where this is the case.
 
-curl -v -X PUT -d @data/cube-config.json "http://localhost:10000/v3/namespaces/default/data/datasets/weblogsCube/properties"
+Let’s update dataset configuration and restart a flow and a service for that to take effect::
 
-cdap-cli.sh stop flow WebAnalyticsApp.CubeWriterFlow
-cdap-cli.sh start flow WebAnalyticsApp.CubeWriterFlow
-cdap-cli.sh stop service WebAnalyticsApp.CubeService
-cdap-cli.sh start service WebAnalyticsApp.CubeService
+  $ curl -v -X PUT -d @data/cube-config.json "http://localhost:10000/v3/namespaces/default/data/datasets/weblogsCube/properties"
+  $ cdap-cli.sh stop flow WebAnalyticsApp.CubeWriterFlow
+  $ cdap-cli.sh start flow WebAnalyticsApp.CubeWriterFlow
+  $ cdap-cli.sh stop service WebAnalyticsApp.CubeService
+  $ cdap-cli.sh start service WebAnalyticsApp.CubeService
 
-Let’s send some more data to compute new aggregations:
+Let’s send some more data to compute new aggregations::
 
-cdap-cli.sh load stream weblogs data/accesslog.txt
+  $ cdap-cli.sh load stream weblogs data/accesslog.txt
 
 Now we can get some stats on referrers using newly added aggregation:
 
-{
-    "aggregation": "agg3",
-    "startTs": 1423370200,
-    "endTs":   1423398198,
-    "measureNames": ["count"],
-    "measureType": "COUNTER",
-    "resolution": 3600,
-    "sliceByTagValues": {"referrer": "http://cdap.io/"},
-    "groupByTags": [],
-    "limit": 1000
-}
+.. code:: json
 
-curl -v -X POST -d @data/query-referrer.json 
-"http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/query"
+  {
+      "aggregation": "agg3",
+      "startTs": 1423370200,
+      "endTs":   1423398198,
+      "measureNames": ["count"],
+      "measureType": "COUNTER",
+      "resolution": 3600,
+      "sliceByTagValues": {"referrer": "http://cdap.io/"},
+      "groupByTags": [],
+      "limit": 1000
+  }
 
-[
-    {
-        "measureName": "count",
-        "tagValues": {},
-        "timeValues": [
-            {
-                "timestamp": 1423375200,
-                "value": 3
-            },
-            {
-                "timestamp": 1423389600,
-                "value": 1
-            }
-        ]
-    }
-]
+Submit::
+  
+  $ curl -v -X POST -d @data/query-referrer.json "http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/query"
 
+Result:
 
+.. code:: json
+
+  [
+      {
+          "measureName": "count",
+          "tagValues": {},
+          "timeValues": [
+              {
+                  "timestamp": 1423375200,
+                  "value": 3
+              },
+              {
+                  "timestamp": 1423389600,
+                  "value": 1
+              }
+          ]
+      }
+  ]
 
 Share and Discuss!
 ==================
