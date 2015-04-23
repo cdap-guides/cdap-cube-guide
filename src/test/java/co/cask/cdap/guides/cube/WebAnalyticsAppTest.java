@@ -105,9 +105,10 @@ public class WebAnalyticsAppTest extends TestBase {
         // search for measures
         Collection<String> measures =
           searchMeasure(url, new CubeExploreQuery(tsInSec - 60, tsInSec + 60, 1, 100, new ArrayList<TagValue>()));
-        Assert.assertEquals(1, measures .size());
-        String measure = measures.iterator().next();
-        Assert.assertEquals("count", measure);
+        Assert.assertEquals(2, measures .size());
+        Iterator<String> mesIt = measures.iterator();
+        Assert.assertEquals("bytes.sent", mesIt.next());
+        Assert.assertEquals("count", mesIt.next());
 
         // query for data
         Collection<TimeSeries> data =
@@ -131,10 +132,6 @@ public class WebAnalyticsAppTest extends TestBase {
     }
   }
 
-  public static void main(String[] args) throws Exception {
-    System.out.println(new SimpleDateFormat("dd/MMM/yyyy:HH:mm:ss Z").parse("08/Feb/2015:04:36:40 +0000").getTime());
-    System.out.println(new SimpleDateFormat("dd/MMM/yyyy:HH:mm:ss Z").parse("08/Feb/2015:12:23:18 +0000").getTime());
-  }
   private Collection<TagValue> searchTag(URL serviceUrl, CubeExploreQuery query) throws IOException {
     URL url = new URL(serviceUrl, "searchTag");
     HttpRequest request = HttpRequest.post(url).withBody(GSON.toJson(query)).build();
