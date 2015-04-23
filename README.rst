@@ -570,7 +570,7 @@ We don’t want to store extra aggregates for the fact where this is the case.
 
 Let’s update dataset configuration and restart a flow and a service for that to take effect::
 
-  $ curl -v -X PUT -d @data/cube-config.json "http://localhost:10000/v3/namespaces/default/data/datasets/weblogsCube/properties"
+  $ curl -v -X PUT -d @resources/cube-config.json "http://localhost:10000/v3/namespaces/default/data/datasets/weblogsCube/properties"
   $ cdap-cli.sh stop flow WebAnalyticsApp.CubeWriterFlow
   $ cdap-cli.sh start flow WebAnalyticsApp.CubeWriterFlow
   $ cdap-cli.sh stop service WebAnalyticsApp.CubeService
@@ -598,7 +598,7 @@ Now we can get some stats on referrers using newly added aggregation:
 
 Submit::
   
-  $ curl -v -X POST -d @data/query-referrer.json "http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/query"
+  $ curl -v -X POST -d @resources/query-referrer.json "http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/query"
 
 Result:
 
