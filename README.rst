@@ -281,7 +281,7 @@ provided by CubeService. For convenience, we’ve put the queries themselves
 into separate JSON files.
 
 Explore and Query Cube
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 Many times, users may not know what data Cube contains and require some 
 exploration first to construct queries themselves. Let’s start by searching 
@@ -318,7 +318,7 @@ The result will be the tag values of the first tags defined in all aggregations:
           "name": "ip",
           "value": "113.72.144.115"
       },
-      [...]
+      /* ... */
       {
           "name": "response_status",
           "value": "200"
@@ -369,7 +369,7 @@ number of bytes sent for specific source ip per each browser type:
       "measureNames": ["bytes.sent"],
       "measureType": "COUNTER",
       "sliceByTagValues": [{"name": "ip", "value": "69.181.160.120"}],
-      "groupByTags": [browser],
+      "groupByTags": ["browser"],
       "limit": 1000
   }
 
@@ -483,14 +483,13 @@ The result is multiple timeseries for each response status:
 I we can see there are just couple 404s which is likely normal :)
 
 Changing Cube Configuration
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------
 
 As application evolves we may need to change Cube aggregation configurations 
 to support new queries or optimize existing ones. Let’s see how you can add an 
 aggregation to an existing Cube.
 
 To change a configuration of the dataset you can use 
-`dataset system RESTful APIs <http://docs.cask.co/cdap/current/en/reference-manual/http-restful-api/http-restful-api-v3/dataset.html>`__. 
 We want the changed configuration to include the following properties:
 
 .. code:: json
@@ -563,6 +562,7 @@ Result:
           ]
       }
   ]
+
 
 Share and Discuss!
 ==================
