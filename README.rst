@@ -285,7 +285,9 @@ Explore and Query Cube
 
 Many times, users may not know what data Cube contains and require some 
 exploration first to construct queries themselves. Let’s start by searching 
-for the tag values that are available in the Cube with the following CubeExploreQuery::
+for the tag values that are available in the Cube with the following CubeExploreQuery:
+
+.. code:: json
 
   {
       "startTs": 1423370200,
@@ -297,7 +299,7 @@ for the tag values that are available in the Cube with the following CubeExplore
 
 Submit::
 
-  $ curl -v -X POST -d @query/search-first.json "http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/searchTag"
+  $ curl -v -X POST -d @resources/search-first.json "http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/searchTag"
 
 The result will be the tag values of the first tags defined in all aggregations::
 
@@ -337,7 +339,7 @@ To drill down further in tag hierarchy of aggregations, let’s refine the query
 
 Submit::
 
-  $ curl -v -X POST -d @query/search-ip-browser.json "http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/searchTag"
+  $ curl -v -X POST -d @resources/search-ip-browser.json "http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/searchTag"
 
 The result is the tag values of the next tag defined in Cube aggregations::
 
@@ -379,90 +381,92 @@ The result is timeseries with one data point (if any available) per hour:
 
 TBD
 
-Query below will help to analyse the number of errors or invalid requests that web site handles:
+Query below will help to analyse the number of errors or invalid requests that web site handles::
 
-{
-    "aggregation": "agg1",
-    "startTs": 1423370200,
-    "endTs":   1423398198,
-    "measureNames": ["count"],
-    "measureType": "COUNTER",
-    "resolution": 3600,
-    "sliceByTagValues": {},
-    "groupByTags": ["response_status"],
-    "limit": 1000
-}
+  {
+      "aggregation": "agg1",
+      "startTs": 1423370200,
+      "endTs":   1423398198,
+      "measureNames": ["count"],
+      "measureType": "COUNTER",
+      "resolution": 3600,
+      "sliceByTagValues": {},
+      "groupByTags": ["response_status"],
+      "limit": 1000
+  }
 
-The result is multiple timeseries for each response status:
+Submit::
 
-curl -v -X POST -d @query/query-response-status.json "http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/query"
+  $ curl -v -X POST -d @resources/query-response-status.json "http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/query"
 
-[
-    {
-        "measureName": "count",
-        "tagValues": {
-            "response_status": "200"
-        },
-        "timeValues": [
-            {
-                "timestamp": 1423371600,
-                "value": 969
-            },
-            {
-                "timestamp": 1423375200,
-                "value": 360
-            },
-            {
-                "timestamp": 1423378800,
-                "value": 409
-            },
-            {
-                "timestamp": 1423382400,
-                "value": 468
-            },
-            {
-                "timestamp": 1423386000,
-                "value": 465
-            },
-            {
-                "timestamp": 1423389600,
-                "value": 468
-            },
-            {
-                "timestamp": 1423393200,
-                "value": 471
-            },
-            {
-                "timestamp": 1423396800,
-                "value": 186
-            }
-        ]
-    },
-    {
-        "measureName": "count",
-        "tagValues": {
-            "response_status": "404"
-        },
-        "timeValues": [
-            {
-                "timestamp": 1423375200,
-                "value": 2
-            },
-            {
-                "timestamp": 1423378800,
-                "value": 2
-            },
-            {
-                "timestamp": 1423386000,
-                "value": 2
-            },
-            {
-                "timestamp": 1423393200,
-                "value": 2
-            }
-        ]
-    }
-]
+The result is multiple timeseries for each response status::
+
+  [
+      {
+          "measureName": "count",
+          "tagValues": {
+              "response_status": "200"
+          },
+          "timeValues": [
+              {
+                  "timestamp": 1423371600,
+                  "value": 969
+              },
+              {
+                  "timestamp": 1423375200,
+                  "value": 360
+              },
+              {
+                  "timestamp": 1423378800,
+                  "value": 409
+              },
+              {
+                  "timestamp": 1423382400,
+                  "value": 468
+              },
+              {
+                  "timestamp": 1423386000,
+                  "value": 465
+              },
+              {
+                  "timestamp": 1423389600,
+                  "value": 468
+              },
+              {
+                  "timestamp": 1423393200,
+                  "value": 471
+              },
+              {
+                  "timestamp": 1423396800,
+                  "value": 186
+              }
+          ]
+      },
+      {
+          "measureName": "count",
+          "tagValues": {
+              "response_status": "404"
+          },
+          "timeValues": [
+              {
+                  "timestamp": 1423375200,
+                  "value": 2
+              },
+              {
+                  "timestamp": 1423378800,
+                  "value": 2
+              },
+              {
+                  "timestamp": 1423386000,
+                  "value": 2
+              },
+              {
+                  "timestamp": 1423393200,
+                  "value": 2
+              }
+          ]
+      }
+  ]
 
 I we can see there are just couple 404s which is likely normal :)
 Changing Cube Configuration
