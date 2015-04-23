@@ -578,7 +578,7 @@ Let’s update dataset configuration and restart a flow and a service for that t
 
 Let’s send some more data to compute new aggregations::
 
-  $ cdap-cli.sh load stream weblogs data/accesslog.txt
+  $ cdap-cli.sh load stream weblogs resources/accesslog.txt
 
 Now we can get some stats on referrers using newly added aggregation:
 
