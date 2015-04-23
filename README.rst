@@ -71,58 +71,83 @@ the ``weblogsCube``.
 
 Implementation
 --------------
-The first step is to get our application structure set up. We will use a
-standard Maven project structure for all of the source code files::
+The first step is to get our application structure set up. We will use a standard 
+Maven project structure for all of the source code files:::
 
     ./pom.xml
-    ./src/main/java/co/cask/cdap/guides/traffic/TrafficApp.java
-    ./src/main/java/co/cask/cdap/guides/traffic/TrafficConditionService.java
-    ./src/main/java/co/cask/cdap/guides/traffic/TrafficEvent.java
-    ./src/main/java/co/cask/cdap/guides/traffic/TrafficEventParser.java
-    ./src/main/java/co/cask/cdap/guides/traffic/TrafficEventSink.java
-    ./src/main/java/co/cask/cdap/guides/traffic/TrafficFlow.java
+    ./src/main/java/co/cask/cdap/guides/cube/WebAnalyticsApp.java
+    ./src/main/java/co/cask/cdap/guides/cube/CubeWriterFlow.java
+    ./src/main/java/co/cask/cdap/guides/cube/CubeWriterFlowlet.java
+    ./src/main/java/co/cask/cdap/guides/cube/CubeHandler.java
 
-The application is identified by the ``TrafficApp`` class. This class extends
-`AbstractApplication 
+The application is identified by the WebAnalyticsApp class. This class extends 
 <http://docs.cdap.io/cdap/current/en/reference-manual/javadocs/co/cask/cdap/api/app/AbstractApplication.html>`__,
-and overrides the ``configure()`` method to define all of the application components:
+and overrides the configure() method to define all of the application components:
 
 .. code:: java
 
-  public class TrafficApp extends AbstractApplication {
-    public static final String APP_NAME = "TrafficApp";
-    public static final String STREAM_NAME = "trafficEvents";
-    public static final String TIMESERIES_TABLE_NAME = "trafficEventTable";   
-    public static final int TIMESERIES_INTERVAL = 15 * 60 * 1000; // 15 minutes 
-
+  public class WebAnalyticsApp extends AbstractApplication {
+    static final String APP_NAME = "WebAnalyticsApp";
+    static final String STREAM_NAME = "weblogs";
+    static final String CUBE_NAME = "weblogsCube";
+    static final String SERVICE_NAME = "CubeService";
+  
     @Override
     public void configure() {
       setName(APP_NAME);
-
+  
       addStream(new Stream(STREAM_NAME));
-      // configure the timeseries table
-      DatasetProperties props =
-        TimeseriesTables.timeseriesTableProperties(TIMESERIES_INTERVAL,
-                                                   DatasetProperties.EMPTY);
-      createDataset(TIMESERIES_TABLE_NAME, CounterTimeseriesTable.class, props);
-      addFlow(new TrafficFlow());
-      addService(new TrafficConditionService());
+  
+      DatasetProperties props = DatasetProperties.builder()
+        .add("dataset.cube.resolutions", "1,60,3600")
+        .add("dataset.cube.aggregation.agg1.tags", "response_status")
+        .add("dataset.cube.aggregation.agg2.tags", "ip,browser")
+        .build();
+      createDataset(CUBE_NAME, Cube.class, props);
+  
+      addFlow(new CubeWriterFlow());
+      addService(SERVICE_NAME, new CubeHandler());
     }
   }
 
-When it comes to handling time-based events, we need a place to receive
-and process the events themselves. CDAP provides a `real-time stream
-processing system <http://docs.cdap.io/cdap/current/en/dev-guide.html#flows>`__ that
-is a great match for handling event streams. After first setting
-the application name, our ``TrafficApp`` adds a new
+First, we need a place to receive and process the events. CDAP provides a 
+`real-time stream processing system <http://docs.cdap.io/cdap/current/en/dev-guide.html#flows>`__
+that is a great match for handling event streams. After first setting 
+the application name, our WebAnalyticsApp adds a new 
 `Stream <http://docs.cdap.io/cdap/current/en/dev-guide.html#streams>`__.
 
-We also need a place to store the traffic event records that we receive;
-``TrafficApp`` next creates a Dataset to store the processed data.
-``TrafficApp`` uses a `CounterTimeseriesTable 
-<http://docs.cdap.io/cdap/current/en/reference-manual/javadocs/co/cask/cdap/api/dataset/lib/CounterTimeseriesTable.html>`__,
-which orders data by a key plus a timestamp. This makes it possible to
-efficiently query the reported values for a given time range.
+Then, the application configures a Cube dataset to compute and store 
+aggregations for combinations of dimensions (tags). Let’s take a closer 
+look at properties that are used to configure the Cube dataset::
+
+    .add("dataset.cube.resolutions", "1,60,3600")
+    .add("dataset.cube.aggregation.agg1.tags", "response_status")
+    .add("dataset.cube.aggregation.agg2.tags", "ip,browser")
+
+Cube dataset can compute aggregates for multiple time resolutions to provide 
+a better view of data for small and big time ranges. E.g. you may want to see 
+data points for each second for last 5 minutes, while to build a sensible 
+chart for a report that covers a week you may ask for per-hour aggregations. 
+The code above defines three resolutions: 1 second, 1 minute (60 seconds), 
+and 1 hour (3600 seconds). When querying the Cube data you can specify any of 
+those depending on your needs.
+
+Each aggregation in a Cube is defined by list of tags, which can later be used 
+for querying. The code above defines two aggregations “agg1” and agg2”. First 
+has only one tag: “response_status”. Thus Cube will allow queries such as 
+“number of requests that had response status 200” or “number of requests for 
+each response status”.
+
+Second aggregation “agg2” defines two tags: ip and browser, which would allow 
+querying by ip, by browser or using both together, as we will see below.
+
+After Cube dataset is configured the application adds CubeWriterFlow to compute 
+CubeFacts from the StreamEvents and write them to a Cube, and CubeService that 
+has a sinlge handler to provide HTTP API to query the Cube. Let’s take a closer 
+look at these two.
+
+TODO
+
 
 Finally, ``TrafficApp`` adds a
 `Flow <http://docs.cdap.io/cdap/current/en/dev-guide.html#flows>`__ to
