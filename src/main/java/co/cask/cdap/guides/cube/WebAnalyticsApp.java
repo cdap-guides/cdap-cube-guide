@@ -16,11 +16,9 @@
 
 package co.cask.cdap.guides.cube;
 
-import co.cask.cdap.api.annotation.UseDataSet;
 import co.cask.cdap.api.app.AbstractApplication;
 import co.cask.cdap.api.data.stream.Stream;
 import co.cask.cdap.api.dataset.DatasetProperties;
-import co.cask.cdap.api.dataset.lib.cube.AbstractCubeHttpHandler;
 import co.cask.cdap.api.dataset.lib.cube.Cube;
 
 /**
@@ -29,13 +27,13 @@ import co.cask.cdap.api.dataset.lib.cube.Cube;
 public class WebAnalyticsApp extends AbstractApplication {
   static final String APP_NAME = "WebAnalyticsApp";
   static final String STREAM_NAME = "weblogs";
-  static final String CUBE_NAME = "cube";
+  static final String CUBE_NAME = "weblogsCube";
   static final String SERVICE_NAME = "CubeService";
 
   @Override
   public void configure() {
     setName(APP_NAME);
-    setDescription("Apache log entries analytics");
+
     addStream(new Stream(STREAM_NAME));
 
     // configure the Cube dataset
@@ -46,17 +44,7 @@ public class WebAnalyticsApp extends AbstractApplication {
       .build();
     createDataset(CUBE_NAME, Cube.class, props);
 
-    addFlow(new CubeFlow());
+    addFlow(new CubeWriterFlow());
     addService(SERVICE_NAME, new CubeHandler());
-  }
-
-  public static final class CubeHandler extends AbstractCubeHttpHandler {
-  @UseDataSet(CUBE_NAME)
-    private Cube cube;
-
-    @Override
-    protected Cube getCube() {
-      return cube;
-    }
   }
 }

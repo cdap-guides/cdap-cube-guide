@@ -1,0 +1,11 @@
+{
+    "aggregation": "agg2",
+    "resolution": 3600,
+    "startTs": 1423370200,
+    "endTs":   1423398198,
+    "measureNames": ["bytes.sent"],
+    "measureType": "COUNTER",
+    "sliceByTagValues": [{"name": "ip", "value": "69.181.160.120"}],
+    "groupByTags": ["browser"],
+    "limit": 1000
+}

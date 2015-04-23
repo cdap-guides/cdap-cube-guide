@@ -22,7 +22,7 @@ import co.cask.cdap.api.flow.FlowSpecification;
 /**
  * Simple flow for parsing weblogs and writing them to a {@link co.cask.cdap.api.dataset.lib.cube.Cube}.
  */
-public class CubeFlow implements Flow {
+public class CubeWriterFlow implements Flow {
   static final String FLOW_NAME = "CubeWriterFlow";
 
   @Override

@@ -74,7 +74,6 @@ public class CubeWriterFlowlet extends AbstractFlowlet {
     fact.addTag("ip", matcher.group(1));
     fact.addTag("request", matcher.group(5));
     fact.addTag("response_status", matcher.group(6));
-    fact.addTag("bytes_sent", matcher.group(7));
     if (!matcher.group(8).equals("-")) {
       fact.addTag("referrer", matcher.group(8));
     }
@@ -82,6 +81,8 @@ public class CubeWriterFlowlet extends AbstractFlowlet {
 
     // adding measurements
     fact.addMeasurement("count", MeasureType.COUNTER, 1);
+    Integer bytesSent = Integer.valueOf(matcher.group(7));
+    fact.addMeasurement("bytes.sent", MeasureType.COUNTER, bytesSent);
     cube.add(fact);
   }
 }

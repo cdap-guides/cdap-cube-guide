@@ -60,7 +60,7 @@ public class WebAnalyticsAppTest extends TestBase {
     ApplicationManager appManager = deployApplication(WebAnalyticsApp.class);
 
     // Start the flow
-    FlowManager flowManager = appManager.startFlow(CubeFlow.FLOW_NAME);
+    FlowManager flowManager = appManager.startFlow(CubeWriterFlow.FLOW_NAME);
     try {
       // Load some data for querying
       StreamWriter streamWriter = appManager.getStreamWriter(WebAnalyticsApp.STREAM_NAME);
@@ -79,7 +79,7 @@ public class WebAnalyticsAppTest extends TestBase {
                           "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2125.122 Safari/537.36\"");
 
       // Wait until all stream events have been processed by the TrafficEventStore Flowlet
-      RuntimeMetrics metrics = RuntimeStats.getFlowletMetrics(WebAnalyticsApp.APP_NAME, CubeFlow.FLOW_NAME, "writer");
+      RuntimeMetrics metrics = RuntimeStats.getFlowletMetrics(WebAnalyticsApp.APP_NAME, CubeWriterFlow.FLOW_NAME, "writer");
       metrics.waitForProcessed(2, 7, TimeUnit.SECONDS);
 
       ServiceManager serviceManager = appManager.startService(WebAnalyticsApp.SERVICE_NAME);
