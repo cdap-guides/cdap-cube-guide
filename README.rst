@@ -355,7 +355,7 @@ The result is the tag values of the next tag defined in Cube aggregations:
       }
   ]
 
-The Cube search API also allows to query for available measures via ``searchMeasure`` endpoint:
+The Cube search API also allows to query for available measures via ``searchMeasure`` endpoint::
 
   $ curl -v -X POST -d @resources/search-ip.json "http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/searchMeasure"
 
@@ -380,7 +380,7 @@ number of bytes sent for specific source ip per each browser type:
       "endTs":   1423398198,
       "measureNames": ["bytes.sent"],
       "measureType": "COUNTER",
-      "sliceByTagValues": [{"name": "ip", "value": "69.181.160.120"}],
+      "sliceByTagValues": {"ip": "69.181.160.120"},
       "groupByTags": ["browser"],
       "limit": 1000
   }
@@ -396,10 +396,56 @@ One way of reading the query definition is the following analogy:
          ts>=startTs AND ts<endTs           -- startTs & endTs
    LIMIT 100                                -- limit
 
+Submit::
+
+  $ curl -v -X POST -d @resources/query-ip-browser.json "http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/query"
 
 The result is timeseries with one data point (if any available) per hour:
 
-TBD
+.. code:: json
+
+  [
+      {
+          "measureName": "bytes.sent",
+          "tagValues": {
+              "browser": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2125.122 Safari/537.36"
+          },
+          "timeValues": [
+              {
+                  "timestamp": 1423371600,
+                  "value": 122240
+              },
+              {
+                  "timestamp": 1423375200,
+                  "value": 122240
+              },
+              {
+                  "timestamp": 1423378800,
+                  "value": 121732
+              },
+              {
+                  "timestamp": 1423382400,
+                  "value": 122240
+              },
+              {
+                  "timestamp": 1423386000,
+                  "value": 121732
+              },
+              {
+                  "timestamp": 1423389600,
+                  "value": 122240
+              },
+              {
+                  "timestamp": 1423393200,
+                  "value": 121732
+              },
+              {
+                  "timestamp": 1423396800,
+                  "value": 47327
+              }
+          ]
+      }
+  ]
 
 Query below will help to analyse the number of errors or invalid requests that web site handles:
 
