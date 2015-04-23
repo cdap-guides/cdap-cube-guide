@@ -1,0 +1,11 @@
+{
+    "aggregation": "agg3",
+    "startTs": 1423370200,
+    "endTs":   1423398198,
+    "measureNames": ["count"],
+    "measureType": "COUNTER",
+    "resolution": 3600,
+    "sliceByTagValues": {"referrer": "http://cdap.io/"},
+    "groupByTags": [],
+    "limit": 1000
+}

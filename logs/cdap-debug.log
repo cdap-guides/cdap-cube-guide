@@ -1,0 +1,15 @@
+2015-04-21 18:35:14,103 - WARN  [main:c.c.c.c.c.Configuration@570] - security.auth.server.address is deprecated. Instead, use security.auth.server.bind.address
+2015-04-21 18:35:14,958 - DEBUG [main:c.c.c.s.a.c.AbstractAuthenticationClient@160] - Try to get the authentication URI from the gateway server: http://Alexs-MacBook-Pro-2.local:10000/v2/ping.
+2015-04-21 18:35:15,001 - DEBUG [main:c.c.c.s.a.c.AbstractAuthenticationClient@163] - Got response 404 - Not Found from http://Alexs-MacBook-Pro-2.local:10000/v2/ping
+2015-04-21 18:35:30,884 - WARN  [main:c.c.c.c.c.Configuration@570] - security.auth.server.address is deprecated. Instead, use security.auth.server.bind.address
+2015-04-21 18:35:31,599 - DEBUG [main:c.c.c.s.a.c.AbstractAuthenticationClient@160] - Try to get the authentication URI from the gateway server: http://Alexs-MacBook-Pro-2.local:10000/v2/ping.
+2015-04-21 18:35:31,631 - DEBUG [main:c.c.c.s.a.c.AbstractAuthenticationClient@163] - Got response 404 - Not Found from http://Alexs-MacBook-Pro-2.local:10000/v2/ping
+2015-04-21 18:50:54,659 - WARN  [main:c.c.c.c.c.Configuration@570] - security.auth.server.address is deprecated. Instead, use security.auth.server.bind.address
+2015-04-21 18:50:55,512 - DEBUG [main:c.c.c.s.a.c.AbstractAuthenticationClient@160] - Try to get the authentication URI from the gateway server: http://Alexs-MacBook-Pro-2.local:10000/v2/ping.
+2015-04-21 18:50:55,555 - DEBUG [main:c.c.c.s.a.c.AbstractAuthenticationClient@163] - Got response 404 - Not Found from http://Alexs-MacBook-Pro-2.local:10000/v2/ping
+2015-04-21 18:52:21,552 - WARN  [main:c.c.c.c.c.Configuration@570] - security.auth.server.address is deprecated. Instead, use security.auth.server.bind.address
+2015-04-21 18:52:22,284 - DEBUG [main:c.c.c.s.a.c.AbstractAuthenticationClient@160] - Try to get the authentication URI from the gateway server: http://Alexs-MacBook-Pro-2.local:10000/v2/ping.
+2015-04-21 18:52:22,316 - DEBUG [main:c.c.c.s.a.c.AbstractAuthenticationClient@163] - Got response 404 - Not Found from http://Alexs-MacBook-Pro-2.local:10000/v2/ping
+2015-04-21 18:53:49,930 - WARN  [main:c.c.c.c.c.Configuration@570] - security.auth.server.address is deprecated. Instead, use security.auth.server.bind.address
+2015-04-21 18:53:50,646 - DEBUG [main:c.c.c.s.a.c.AbstractAuthenticationClient@160] - Try to get the authentication URI from the gateway server: http://Alexs-MacBook-Pro-2.local:10000/v2/ping.
+2015-04-21 18:53:50,677 - DEBUG [main:c.c.c.s.a.c.AbstractAuthenticationClient@163] - Got response 404 - Not Found from http://Alexs-MacBook-Pro-2.local:10000/v2/ping

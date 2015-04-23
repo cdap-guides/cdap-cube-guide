@@ -1,0 +1,11 @@
+{
+    "aggregation": "agg1",
+    "startTs": 1423370200,
+    "endTs":   1423398198,
+    "measureNames": ["count"],
+    "measureType": "COUNTER",
+    "resolution": 3600,
+    "sliceByTagValues": {},
+    "groupByTags": ["response_status"],
+    "limit": 1000
+}

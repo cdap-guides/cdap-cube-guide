@@ -1,0 +1,5 @@
+2015-04-21 18:35:14,103 - WARN  [main:c.c.c.c.c.Configuration@570] - security.auth.server.address is deprecated. Instead, use security.auth.server.bind.address
+2015-04-21 18:35:30,884 - WARN  [main:c.c.c.c.c.Configuration@570] - security.auth.server.address is deprecated. Instead, use security.auth.server.bind.address
+2015-04-21 18:50:54,659 - WARN  [main:c.c.c.c.c.Configuration@570] - security.auth.server.address is deprecated. Instead, use security.auth.server.bind.address
+2015-04-21 18:52:21,552 - WARN  [main:c.c.c.c.c.Configuration@570] - security.auth.server.address is deprecated. Instead, use security.auth.server.bind.address
+2015-04-21 18:53:49,930 - WARN  [main:c.c.c.c.c.Configuration@570] - security.auth.server.address is deprecated. Instead, use security.auth.server.bind.address

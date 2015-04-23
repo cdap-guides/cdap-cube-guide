@@ -1,0 +1,10 @@
+{
+    "typeName":"co.cask.cdap.api.dataset.lib.cube.Cube",
+    "properties": {
+        "dataset.cube.resolutions":"1,60,3600",
+        "dataset.cube.aggregation.agg1.tags":"response_status",
+        "dataset.cube.aggregation.agg2.tags":"ip,browser",
+        "dataset.cube.aggregation.agg3.tags":"referrer",
+        "dataset.cube.aggregation.agg3.requiredTags":"referrer"
+    }
+}

@@ -1,0 +1,4 @@
+co/cask/cdap/guides/cube/CubeFlow.class
+co/cask/cdap/guides/cube/WebAnalyticsApp.class
+co/cask/cdap/guides/cube/CubeWriterFlowlet.class
+co/cask/cdap/guides/cube/WebAnalyticsApp$CubeHandler.class
