@@ -168,7 +168,7 @@ public class CubeWriterFlow implements Flow {
   }
 }
 
-The Flow configures a single CubeWriterFlowlet to consume data from a Stream::
+The Flow configures a single CubeWriterFlowlet to consume data from a Stream:
 
 .. code:: java
 
@@ -230,7 +230,7 @@ sent.
 
 *CubeService*
 
-CubeService added to the application is constructed using a single handler::
+CubeService added to the application is constructed using a single handler:
 
 .. code:: java
 
@@ -282,6 +282,254 @@ into separate JSON files.
 
 Explore and Query Cube
 ----------------------
+
+Many times, users may not know what data Cube contains and require some 
+exploration first to construct queries themselves. Let’s start by searching 
+for the tag values that are available in the Cube with the following CubeExploreQuery::
+
+  {
+      "startTs": 1423370200,
+      "endTs":   1423398198,
+      "resolution": 3600,
+      "tagValues": [],
+      "limit": 1000
+  }
+
+Submit::
+
+  $ curl -v -X POST -d @query/search-first.json "http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/searchTag"
+
+The result will be the tag values of the first tags defined in all aggregations::
+
+  [
+      {
+          "name": "ip",
+          "value": "69.181.160.120"
+      },
+      {
+          "name": "ip",
+          "value": "109.63.206.34"
+      },
+      {
+          "name": "ip",
+          "value": "113.72.144.115"
+      },
+      [...]
+      {
+          "name": "response_status",
+          "value": "200"
+      },
+      {
+          "name": "response_status",
+          "value": "404"
+      }
+  ]
+
+To drill down further in tag hierarchy of aggregations, let’s refine the query with specific tag value::
+
+  {
+      "startTs": 1423370200,
+      "endTs":   1423398198,
+      "resolution": 3600,
+      "tagValues": [{"name": "ip", "value": "69.181.160.120"}],
+      "limit": 1000
+  }
+
+Submit::
+
+  $ curl -v -X POST -d @query/search-ip-browser.json "http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/searchTag"
+
+The result is the tag values of the next tag defined in Cube aggregations::
+
+  [
+      {
+          "name": "browser",
+          "value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2125.122 Safari/537.36"
+      }
+  ]
+
+Now, let’s perform some data queries. Here’s how we can get timeseries for 
+number of bytes sent for specific source ip per each browser type::
+
+  {
+      "aggregation": "agg2",
+      "resolution": 3600,
+      "startTs": 1423370200,
+      "endTs":   1423398198,
+      "measureNames": ["bytes.sent"],
+      "measureType": "COUNTER",
+      "sliceByTagValues": [{"name": "ip", "value": "69.181.160.120"}],
+      "groupByTags": [browser],
+      "limit": 1000
+  }
+
+One way of reading the query definition is the following analogy::
+
+.. code:: sql
+
+   SELECT count('bytes.sent')               -- measure name and type
+   FROM agg1.1h_resolution                  -- aggregation & resolution
+   GROUP BY browser,                        -- groupByTags
+   WHERE ip=’69.181.160.120’ AND            -- sliceByTags
+         ts>=startTs AND ts<endTs           -- startTs & endTs
+   LIMIT 100                                -- limit
+
+
+The result is timeseries with one data point (if any available) per hour:
+
+TBD
+
+Query below will help to analyse the number of errors or invalid requests that web site handles:
+
+{
+    "aggregation": "agg1",
+    "startTs": 1423370200,
+    "endTs":   1423398198,
+    "measureNames": ["count"],
+    "measureType": "COUNTER",
+    "resolution": 3600,
+    "sliceByTagValues": {},
+    "groupByTags": ["response_status"],
+    "limit": 1000
+}
+
+The result is multiple timeseries for each response status:
+
+curl -v -X POST -d @query/query-response-status.json "http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/query"
+
+[
+    {
+        "measureName": "count",
+        "tagValues": {
+            "response_status": "200"
+        },
+        "timeValues": [
+            {
+                "timestamp": 1423371600,
+                "value": 969
+            },
+            {
+                "timestamp": 1423375200,
+                "value": 360
+            },
+            {
+                "timestamp": 1423378800,
+                "value": 409
+            },
+            {
+                "timestamp": 1423382400,
+                "value": 468
+            },
+            {
+                "timestamp": 1423386000,
+                "value": 465
+            },
+            {
+                "timestamp": 1423389600,
+                "value": 468
+            },
+            {
+                "timestamp": 1423393200,
+                "value": 471
+            },
+            {
+                "timestamp": 1423396800,
+                "value": 186
+            }
+        ]
+    },
+    {
+        "measureName": "count",
+        "tagValues": {
+            "response_status": "404"
+        },
+        "timeValues": [
+            {
+                "timestamp": 1423375200,
+                "value": 2
+            },
+            {
+                "timestamp": 1423378800,
+                "value": 2
+            },
+            {
+                "timestamp": 1423386000,
+                "value": 2
+            },
+            {
+                "timestamp": 1423393200,
+                "value": 2
+            }
+        ]
+    }
+]
+
+I we can see there are just couple 404s which is likely normal :)
+Changing Cube Configuration
+
+As application evolves we may need to change Cube aggregation configurations to support new queries or optimize existing ones. Let’s see how you can add an aggregation to an existing Cube.
+
+To change a configuration of the dataset you can use dataset system RESTful APIs. We want the changed configuration to include the following properties:
+
+{
+    "typeName":"co.cask.cdap.api.dataset.lib.cube.Cube",
+    "properties": {
+        "dataset.cube.resolutions":"1,60,3600",
+        "dataset.cube.aggregation.agg1.tags":"response_status",
+        "dataset.cube.aggregation.agg2.tags":"ip,browser",
+        "dataset.cube.aggregation.agg3.tags":"referrer",
+        "dataset.cube.aggregation.agg3.requiredTags":"referrer"
+    }
+}
+
+We added “agg3” that computes stats for referrers. Note the extra property that ends with requiredTags: it tells to only use this aggregation if required tag is present in a CubeFact. You may noticed in CubeWriterFlowlet that referrer field may be empty in a log entry. We don’t want to store extra aggregates for the fact where this is the case.
+
+Let’s update dataset configuration and restart a flow and a service for that to take effect:
+
+curl -v -X PUT -d @data/cube-config.json "http://localhost:10000/v3/namespaces/default/data/datasets/weblogsCube/properties"
+
+cdap-cli.sh stop flow WebAnalyticsApp.CubeWriterFlow
+cdap-cli.sh start flow WebAnalyticsApp.CubeWriterFlow
+cdap-cli.sh stop service WebAnalyticsApp.CubeService
+cdap-cli.sh start service WebAnalyticsApp.CubeService
+
+Let’s send some more data to compute new aggregations:
+
+cdap-cli.sh load stream weblogs data/accesslog.txt
+
+Now we can get some stats on referrers using newly added aggregation:
+
+{
+    "aggregation": "agg3",
+    "startTs": 1423370200,
+    "endTs":   1423398198,
+    "measureNames": ["count"],
+    "measureType": "COUNTER",
+    "resolution": 3600,
+    "sliceByTagValues": {"referrer": "http://cdap.io/"},
+    "groupByTags": [],
+    "limit": 1000
+}
+
+curl -v -X POST -d @data/query-referrer.json 
+"http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/query"
+
+[
+    {
+        "measureName": "count",
+        "tagValues": {},
+        "timeValues": [
+            {
+                "timestamp": 1423375200,
+                "value": 3
+            },
+            {
+                "timestamp": 1423389600,
+                "value": 1
+            }
+        ]
+    }
+]
 
 
 
