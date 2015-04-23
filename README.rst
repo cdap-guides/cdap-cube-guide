@@ -57,7 +57,7 @@ of those in this guide to not focus.
 
 The application consists of the following components:
 
-.. image:: docs/images/app-design.png
+.. image:: docs/img/app-design.png
    :width: 8in
    :align: center
 
