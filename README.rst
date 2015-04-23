@@ -391,7 +391,7 @@ One way of reading the query definition is the following analogy:
 .. code:: sql
 
    SELECT    count('bytes.sent')               -- measure name and type
-   FROM      agg1.1h_resolution                -- aggregation & resolution
+   FROM      agg2.1h_res                       -- aggregation & resolution
    GROUP BY  browser,                          -- groupByTags
    WHERE     ip=’69.181.160.120’ AND           -- sliceByTags
              ts>=1423370200 AND ts<1423398198  -- startTs & endTs
