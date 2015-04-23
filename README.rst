@@ -80,9 +80,9 @@ Maven project structure for all of the source code files:::
     ./src/main/java/co/cask/cdap/guides/cube/CubeWriterFlowlet.java
     ./src/main/java/co/cask/cdap/guides/cube/CubeHandler.java
 
-The application is identified by the WebAnalyticsApp class. This class extends 
+The application is identified by the ``WebAnalyticsApp`` class. This class extends 
 <http://docs.cdap.io/cdap/current/en/reference-manual/javadocs/co/cask/cdap/api/app/AbstractApplication.html>`__,
-and overrides the configure() method to define all of the application components:
+and overrides the ``configure()`` method to define all of the application components:
 
 .. code:: java
 
@@ -143,8 +143,8 @@ each response status”.
 Second aggregation “agg2” defines two tags: ip and browser, which would allow 
 querying by ip, by browser or using both together, as we will see below.
 
-After Cube dataset is configured the application adds CubeWriterFlow to compute 
-CubeFacts from the StreamEvents and write them to a Cube, and CubeService that 
+After Cube dataset is configured the application adds ``CubeWriterFlow`` to compute 
+``CubeFact``s from the ``StreamEvent``s and write them to a Cube, and ``CubeService`` that 
 has a sinlge handler to provide HTTP API to query the Cube. Let’s take a closer 
 look at these two.
 
@@ -168,7 +168,7 @@ look at these two.
     }
   }
 
-The Flow configures a single CubeWriterFlowlet to consume data from a Stream:
+The Flow configures a single ``CubeWriterFlowlet`` to consume data from a Stream:
 
 .. code:: java
 
@@ -222,7 +222,7 @@ CubeWriterFlowlet uses Cube dataset that is injected via @UseDataSet annotation
 with specified dataset name. It also utilizes injected by a framework Metrics 
 field to report on log parsing errors.
 
-Flowlet process method parses the body of the StreamEvent that contains a log 
+Flowlet process method parses the body of the ``StreamEvent`` that contains a log 
 entry in a combined log format. Then it constructs a CubeFact by adding tags using 
 the parsed field values. It adds a two measurements to be computed by Cube in every 
 aggregation: the “count” for number of requests and “bytes.sent” for amount of data 
@@ -266,7 +266,8 @@ If you haven't already started a standalone CDAP installation, start it with the
 
   $ cdap.sh start
 
-We can then deploy the application to a standalone CDAP installation and start CubeWriterFlow and CubeService::
+We can then deploy the application to a standalone CDAP installation and start ``CubeWriterFlow``
+and ``CubeService``::
 
   $ cdap-cli.sh deploy app target/cdap-cube-guide-<version>.jar
   $ cdap-cli.sh start flow WebAnalyticsApp.CubeWriterFlow
