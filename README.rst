@@ -390,12 +390,12 @@ One way of reading the query definition is the following analogy:
 
 .. code:: sql
 
-   SELECT count('bytes.sent')               -- measure name and type
-   FROM agg1.1h_resolution                  -- aggregation & resolution
-   GROUP BY browser,                        -- groupByTags
-   WHERE ip=’69.181.160.120’ AND            -- sliceByTags
-         ts>=startTs AND ts<endTs           -- startTs & endTs
-   LIMIT 100                                -- limit
+   SELECT    count('bytes.sent')               -- measure name and type
+   FROM      agg1.1h_resolution                -- aggregation & resolution
+   GROUP BY  browser,                          -- groupByTags
+   WHERE     ip=’69.181.160.120’ AND           -- sliceByTags
+             ts>=startTs AND ts<endTs          -- startTs & endTs
+   LIMIT     100                               -- limit
 
 Submit::
 
