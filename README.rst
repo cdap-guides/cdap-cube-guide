@@ -1,37 +1,35 @@
-=======================
-Storing Timeseries Data
-=======================
+=============================
+Data Analytics with OLAP Cube
+=============================
 
-The `Cask Data Application Platform (CDAP) <http://cdap.io>`__ provides a
-number of pre-packaged Datasets, which make it easy to store and
-retrieve data using best-practices-based implementations of common data
-access patterns. In this guide, you will learn how to process and store
-timeseries data, using the example of real-time sensor data from a
-traffic monitor network.
+The `Cask Data Application Platform (CDAP) <http://cdap.io>`__ provides a 
+number of pre-packaged Datasets, which make it easy to store and retrieve 
+data using best-practices-based implementations of common data access patterns. 
+In this guide, you will learn how to store multidimensional data points in a 
+Cube dataset and perform queries with it for analysis using example of 
+processing web logs.
 
 What You Will Build
 ===================
 
 This guide will take you through building a simple
 `CDAP application <http://docs.cdap.io/cdap/current/en/developers-manual/building-blocks/applications.html>`__
-to ingest data from a sensor network of traffic monitors, aggregate the
-event counts into a traffic volume per road segment, and query the
-traffic volume over a time period to produce a traffic condition report.
-You will:
+to ingest web logs, aggregate the request counts for different combinations 
+of fields and, and query the volume over a time period to get useful insight
+on traffic of a web site and its health. You will:
 
 - Use a
   `Stream <http://docs.cdap.io/cdap/current/en/developers-manual/building-blocks/streams.html>`__
-  to ingest real-time events data;
+  to ingest real-time log data;
 - Build a
   `Flow <http://docs.cdap.io/cdap/current/en/developers-manual/building-blocks/flows-flowlets/flows.html>`__
-  to process events as they are received, and count by road segment and
-  event type;
+  to process log entries as they are received into a multi-dimensional facts;
 - Use a
   `Dataset <http://docs.cdap.io/cdap/current/en/developers-manual/building-blocks/datasets/index.html>`__
-  to store the event data; and
+  to store aggregated numbers; and
 - Build a
   `Service <http://docs.cdap.io/cdap/current/en/developers-manual/building-blocks/services.html>`__
-  to retrieve the event counts by time range.
+  to query the aggregated data across multiple dimensions.
 
 What You Will Need
 ==================
@@ -51,22 +49,11 @@ next two sections and jump right to the
 
 Application Design
 ------------------
-For this guide, we will assume that we are processing events from a
-sensor network of traffic monitors. Each traffic monitor covers a given
-road segment and provides periodic reports of the number of passing
-vehicles, and a count of any traffic accidents that have occurred.
-
-Sensors report in from the network by sending event records containing
-the following fields:
-
-- ``road_segment_id``: ``LONG`` (unique identifier for the road segment)
-- ``timestamp``: ``YYYY-MM-DD hh:mm:ss`` formatted
-- ``event_type``:
-
-    - ``VEHICLE``: indicates a count of vehicles passing the sensor since the last report
-    - ``ACCIDENT``: indicates a count of traffic accidents since the last report
-      
-- ``count``: ``INT``
+For this guide we will assume we are processing logs of a web-site that are produce by apache
+web server. The data is collected from multiple servers and is sent to our application over HTTP. 
+There are number of `tools <http://docs.cdap.io/cdap/current/en/developers-manual/ingesting-tools/index.html>`__
+that can help you with the ingestion task. We will not get into details 
+of those in this guide to not focus.
 
 The application consists of the following components:
 
@@ -74,20 +61,13 @@ The application consists of the following components:
    :width: 8in
    :align: center
 
-Incoming events feed into the application through a Stream. CDAP
-provides a RESTful API for ingesting events into a Stream.
-
-Once fed into the Stream, events are processed by the ``TrafficEventParser``
-Flowlet, which normalizes and validates the event data, transforming the
-stream entry into a ``TrafficEvent`` object. Parsed ``TrafficEvent``\ s are
-then passed along to the ``TrafficEventSink`` Flowlet, which stores the
-event counts in a Timeseries Dataset. The Timeseries Dataset aggregates
-the event counts by road segment ID and time window.
-
-In addition to storing the sensor data as a timeseries, we also want to
-query the recent traffic data in order to provide traffic condition
-alerts to drivers. The ``TrafficConditionService`` exposes an HTTP RESTful API to
-support this.
+Weblogs are sent to a ``weblogs`` Stream that is consumed by a ``CubeWriterFlow``. 
+The ``CubeWriterFlow`` has a single ``CubeWriterFlowlet`` that parses StreamEvent’s 
+body into a CubeFact and writes it into a ``weblogsCube`` dataset. The dataset 
+is configured to aggregate data for specific combinations of dimensions of 
+``CubeFact`` and provides a querying interface over stored aggregations. 
+The application uses ``CubeService`` to provide an HTTP interface for querying 
+the ``weblogsCube``.
 
 Implementation
 --------------
