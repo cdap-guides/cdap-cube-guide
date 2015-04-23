@@ -120,6 +120,8 @@ Then, the application configures a Cube dataset to compute and store
 aggregations for combinations of dimensions (tags). Let’s take a closer 
 look at properties that are used to configure the Cube dataset::
 
+.. code:: java
+
     .add("dataset.cube.resolutions", "1,60,3600")
     .add("dataset.cube.aggregation.agg1.tags", "response_status")
     .add("dataset.cube.aggregation.agg2.tags", "ip,browser")
@@ -146,276 +148,112 @@ CubeFacts from the StreamEvents and write them to a Cube, and CubeService that
 has a sinlge handler to provide HTTP API to query the Cube. Let’s take a closer 
 look at these two.
 
-TODO
-
-
-Finally, ``TrafficApp`` adds a
-`Flow <http://docs.cdap.io/cdap/current/en/dev-guide.html#flows>`__ to
-process data from the Stream, and a
-`Service <http://docs.cdap.io/cdap/current/en/dev-guide.html#services>`__
-to query the traffic events that have been processed and stored.
-
-The incoming traffic events are processed in two phases, defined in the
-``TrafficFlow`` class by building a ``FlowSpecification`` in the ``configure()``
-method:
+*CubeWriterFlow*
 
 .. code:: java
 
-  public class TrafficFlow implements Flow {
-    public static final String FLOW_NAME = "TrafficFlow";
+public class CubeWriterFlow implements Flow {
+  static final String FLOW_NAME = "CubeWriterFlow";
 
-    @Override
-    public FlowSpecification configure() {
-      return FlowSpecification.Builder.with()
-        .setName(FLOW_NAME)
-        .setDescription("Reads traffic events from a stream and persists to a timeseries dataset")
-        .withFlowlets()
-          .add("parser", new TrafficEventParser())
-          .add("sink", new TrafficEventSink())
-        .connect()
-          .fromStream(TrafficApp.STREAM_NAME).to("parser")
-          .from("parser").to("sink")
-        .build();
-    }
+  @Override
+  public FlowSpecification configure() {
+    return FlowSpecification.Builder.with()
+      .setName(FLOW_NAME)
+      .setDescription("Reads logs from stream and writes them to a Cube dataset")
+      .withFlowlets()
+        .add("writer", new CubeWriterFlowlet())
+      .connect()
+        .fromStream(WebAnalyticsApp.STREAM_NAME).to("writer")
+      .build();
   }
+}
 
-``TrafficFlow`` first registers the two `Flowlets 
-<http://docs.cdap.io/cdap/current/en/developers-manual/building-blocks/flows-flowlets/flowlets.html>`__
-to be used in the specification, then connects the registered Flowlets
-into a processing pipeline. The first Flowlet, ``TrafficEventParser``, reads
-raw events from the Stream, parses and validates the individual fields,
-and then emits the structured event objects. The second flowlet, ``TrafficEventSink``,
-receives the structured events from ``TrafficEventParser``, and stores them
-to the ``CounterTimeseriesTable`` Dataset.
-
-The ``TrafficEvent`` passed between the Flowlets is a simple POJO (getters
-and setters have been omitted in this code fragment):
+The Flow configures a single CubeWriterFlowlet to consume data from a Stream::
 
 .. code:: java
 
-  public class TrafficEvent {
-    public enum Type { VEHICLE, ACCIDENT };
-
-    private final String roadSegmentId;
-    private final long timestamp;
-    private final Type type;
-    private final int count;
-    ...
-  }
-
-First, let’s look at ``TrafficEventParser`` in more detail:
-
-.. code:: java
-
-  public class TrafficEventParser extends AbstractFlowlet {
-    public static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss"; 
-
-    private final DateFormat df = new SimpleDateFormat(DATE_FORMAT);
-
+  public class CubeWriterFlowlet extends AbstractFlowlet {
+    private static final Pattern CLF_PATTERN =
+      Pattern.compile("^([\\d.]+) (\\S+) (\\S+) \\[([\\w:/]+\\s[+\\-]\\d{4})\\] " +
+                        "\"(.+?)\" (\\d{3}) (\\d+) \"([^\"]+)\" \"([^\"]+)\"");
+  
+    private static final DateFormat DATE_FORMAT = new SimpleDateFormat("dd/MMM/yyyy:HH:mm:ss Z");
+  
     private Metrics metrics;
-    private OutputEmitter<TrafficEvent> out;
-
+  
+    @UseDataSet(WebAnalyticsApp.CUBE_NAME)
+    private Cube cube;
+  
     @ProcessInput
-    public void process(StreamEvent event) {
-      String body = Charsets.UTF_8.decode(event.getBody()).toString();
-      String[] parts = body.split("\\s*,\\s*");
-      if (parts.length != 4) {
-        metrics.count("event.bad", 1);
-        return;
-      } 
-
-      long timestamp;
-      try {
-        if ("now".equalsIgnoreCase(parts[1])) {
-          timestamp = System.currentTimeMillis();
-        } else {
-          timestamp = df.parse(parts[1]).getTime();
-        }
-      } catch (ParseException pe) {
-        metrics.count("event.bad", 1);
+    public void process(StreamEvent event) throws Exception {
+  
+      String logEntryLine = Bytes.toString(event.getBody());
+  
+      Pattern p = CLF_PATTERN;
+      Matcher matcher = p.matcher(logEntryLine);
+      if (!matcher.matches()) {
+        metrics.count("parse.errors", 1);
         return;
       }
-      TrafficEvent.Type type;
-      try {
-        type = TrafficEvent.Type.valueOf(parts[2]);
-      } catch (IllegalArgumentException iae) {
-        metrics.count("event.bad", 1);
-        return;
+  
+      // creating CubeFact with timestamp of the log record
+      long ts = DATE_FORMAT.parse(matcher.group(4)).getTime();
+      CubeFact fact = new CubeFact(ts / 1000);
+  
+      // adding tags (dimensions)
+      fact.addTag("ip", matcher.group(1));
+      fact.addTag("request", matcher.group(5));
+      fact.addTag("response_status", matcher.group(6));
+      if (!matcher.group(8).equals("-")) {
+        fact.addTag("referrer", matcher.group(8));
       }
-      int count;
-      try {
-        count = Integer.parseInt(parts[3]);
-      } catch (NumberFormatException nfe) {
-        metrics.count("event.bad", 1);
-        return;
-      } 
-
-      out.emit(new TrafficEvent(parts[0], timestamp, type, count));
+      fact.addTag("browser", matcher.group(9));
+  
+      // adding measurements
+      fact.addMeasurement("count", MeasureType.COUNTER, 1);
+      Integer bytesSent = Integer.valueOf(matcher.group(7));
+      fact.addMeasurement("bytes.sent", MeasureType.COUNTER, bytesSent);
+    
+      cube.add(fact);
     }
   }
 
-The ``process()`` method is annotated with ``@ProcessInput``, telling CDAP that
-this method should be invoked for incoming events. Since
-``TrafficEventParser`` is connected to the Stream, it receives events of
-type ``StreamEvent``. Each ``StreamEvent`` contains a request body with the raw
-input data, which we expect in the format::
+CubeWriterFlowlet uses Cube dataset that is injected via @UseDataSet annotation
+with specified dataset name. It also utilizes injected by a framework Metrics 
+field to report on log parsing errors.
 
-    <road segment ID>, <timestamp>, <type>, <count>
+Flowlet process method parses the body of the StreamEvent that contains a log 
+entry in a combined log format. Then it constructs a CubeFact by adding tags using 
+the parsed field values. It adds a two measurements to be computed by Cube in every 
+aggregation: the “count” for number of requests and “bytes.sent” for amount of data 
+sent.
 
-The ``process()`` method validates each field for the correct type,
-constructs a new ``TrafficEvent`` object, and emits the object to any
-downstream Flowlets using the defined `OutputEmitter 
-<http://docs.cdap.io/cdap/current/en/reference-manual/javadocs/co/cask/cdap/api/flow/flowlet/OutputEmitter.html>`__
-instance.
+*CubeService*
 
-The next step in the pipeline is the ``TrafficEventSink`` Flowlet:
+CubeService added to the application is constructed using a single handler::
 
 .. code:: java
 
-  public class TrafficEventSink extends AbstractFlowlet {
-    @UseDataSet(TrafficApp.TIMESERIES_TABLE_NAME)
-    private CounterTimeseriesTable table;
+public final class CubeHandler extends AbstractCubeHttpHandler {
+  @UseDataSet(WebAnalyticsApp.CUBE_NAME)
+  private Cube cube;
 
-    @ProcessInput
-    public void process(TrafficEvent event) {
-      table.increment(Bytes.toBytes(event.getRoadSegmentId()),
-                      event.getCount(),
-                      event.getTimestamp(),
-                      Bytes.toBytes(event.getType().name()));
-    }
+  @Override
+  protected Cube getCube() {
+    return cube;
   }
+}
 
-In order to access the ``CounterTimeseriesTable`` used by the application,
-``TrafficEventSink`` declares a variable with the `\@UseDataSet 
-<http://docs.cdap.io/cdap/current/en/reference-manual/javadocs/co/cask/cdap/api/annotation/UseDataSet.html>`__
-annotation and the name used to create the Dataset in ``TrafficApp``. This
-variable will be injected with a reference to the ``CounterTimeseriesTable``
-instance when the Flowlet runs.
+AbstractCubeHttpHandler that is provided out-of-the-box with CDAP handles basic 
+Cube methods, such as add, searchTag, searchMeasure and query while the subclass 
+only needs to return Cube dataset itself. Below we will see how to use the HTTP 
+interface of the service.
 
-``TrafficEventSink`` also defines a ``process()`` method, annotated with `\@ProcessInput 
-<http://docs.cdap.io/cdap/current/en/reference-manual/javadocs/co/cask/cdap/api/annotation/ProcessInput.html>`__,
-for handling incoming events from ``TrafficEventParser``. Since
-``TrafficEventParser`` emits ``TrafficEvent`` objects, the process method
-takes an input parameter of the same type. Here, we simply increment a
-counter for the incoming event, using the road segment ID as the key,
-and adding the event type (VEHICLE or ACCIDENT) as a tag. When querying
-records out of the ``CounterTimeseriesTable``, we can specify the required
-tags as an additional filter on the records to return. Only those
-entries having all of the given tags will be returned in the results.
-
-Now that we have the full pipeline setup for ingesting data from our
-traffic sensors, we are ready to create a Service to query the traffic
-sensor reports in response to real-time requests. This Service will take
-a given road segment ID as input, query the road segment's recent data,
-and respond with a simple classification of how congested that segment
-currently is, according to these rules:
-
--   If any traffic accidents were reported, return RED;
--   If two or more vehicle count reports are greater than the threshold, return RED;
--   If one vehicle count report is greater than the threshold, return YELLOW;
--   Otherwise, return GREEN.
-
-``TrafficConditionService`` defines a simple HTTP RESTful endpoint to perform
-this query and return a response:
-
-.. code:: java
-
-  public class TrafficConditionService extends AbstractService {
-    public enum Condition {GREEN, YELLOW, RED};
-
-    public static final String SERVICE_NAME = "TrafficConditions";
-
-    @Override
-    protected void configure() {
-      setName(SERVICE_NAME);
-      useDataset(TrafficApp.TIMESERIES_TABLE_NAME);
-      addHandler(new TrafficConditionHandler());
-    }
-
-    @Path("/v1")
-    public static final class TrafficConditionHandler extends 
-        AbstractHttpServiceHandler {
-      private static final int CONGESTED_THRESHOLD = 100;
-      private static final long LOOKBACK_PERIOD =
-          TrafficApp.TIMESERIES_INTERVAL * 3;
-
-      @UseDataSet(TrafficApp.TIMESERIES_TABLE_NAME)
-      private CounterTimeseriesTable table;
-
-      @Path("road/{segment}/recent")
-      @GET
-      public void recentConditions(HttpServiceRequest request, 
-                                   HttpServiceResponder responder,
-                                   @PathParam("segment") String segmentId) {
-        long endTime = System.currentTimeMillis();
-        long startTime = endTime - LOOKBACK_PERIOD;
-
-        Condition currentCondition = Condition.GREEN;
-        int accidentEntries =
-          getCountsExceeding(segmentId, startTime, endTime, 
-                             TrafficEvent.Type.ACCIDENT, 0);
-        if (accidentEntries > 0) {
-          currentCondition = Condition.RED;
-        } else {
-          int congestedEntries =
-            getCountsExceeding(segmentId, startTime, endTime,
-                               TrafficEvent.Type.VEHICLE, CONGESTED_THRESHOLD);
-          if (congestedEntries > 1) {
-            currentCondition = Condition.RED;
-          } else if (congestedEntries > 0) {
-            currentCondition = Condition.YELLOW;
-          }
-        }
-        responder.sendString(currentCondition.name());
-      }
-
-      private int getCountsExceeding(String roadSegmentId,
-                                     long startTime, long endTime,
-                                     TrafficEvent.Type type, long threshold) {
-        int count = 0;
-        Iterator<CounterTimeseriesTable.Counter> events =
-          table.read(Bytes.toBytes(roadSegmentId), startTime, endTime, 
-                     Bytes.toBytes(type.name()));
-        while (events.hasNext()) {
-          if (events.next().getValue() > threshold) {
-            count++;
-          }
-        }
-        return count;
-      }
-    }
-  }
-
-In the ``configure()`` method, ``TrafficConditionService`` defines a handler
-class, ``TrafficConditionHandler``, and a Dataset to use in serving requests.
-``TrafficConditionHandler`` once again makes use of the ``@UseDataSet``
-annotation on an instance variable to obtain a reference to the
-``CounterTimeseriesTable`` Dataset where traffic events are persisted.
-
-The core of the service is the ``recentConditions()`` method.
-``TrafficConditionHandler`` exposes this method as a RESTful endpoint through the
-use of JAX-RS annotations. The ``@Path`` annotation defines the URL to which
-the endpoint will be mapped, while the ``@GET`` annotation defines the HTTP
-request method supported. The ``recentConditions()`` method declares
-``HttpServiceRequest`` and ``HttpServiceResponder`` parameters to,
-respectively, provide access to request elements and to control the
-response output. The ``@PathParam`` ("segment") annotation on the third
-method parameter provides access to the ``{segment}`` path element as an
-input parameter.
-
-The ``recentConditions()`` method first queries the timeseries Dataset for
-any accident reports for the given road segment in the past 45 minutes.
-If any are found, a "RED" condition report will be returned. If no
-accident reports are present, it continues to query the timeseries
-data for the number of vehicle report entries that exceed a set
-threshold (100). Based on the number of entries found, the method
-returns the appropriate congestion level according to the rules
-previously described.
 
 Build and Run Application
 =========================
 
-The ``TrafficApp`` application can be built and packaged using the Apache Maven command::
+The ``WebAnalyticsApp`` application can be built and packaged using the Apache Maven command::
 
   $ mvn clean package
 
@@ -428,64 +266,24 @@ If you haven't already started a standalone CDAP installation, start it with the
 
   $ cdap.sh start
 
-We can then deploy the application to a standalone CDAP installation::
+We can then deploy the application to a standalone CDAP installation and start CubeWriterFlow and CubeService::
 
-  $ cdap-cli.sh deploy app target/cdap-timeseries-guide-<version>.jar
-  $ cdap-cli.sh start flow TrafficApp.TrafficFlow
+  $ cdap-cli.sh deploy app target/cdap-cube-guide-<version>.jar
+  $ cdap-cli.sh start flow WebAnalyticsApp.CubeWriterFlow
+  $ cdap-cli.sh start service WebAnalyticsApp.CubeService
 
-Next, we will send some sample records into the stream for processing::
-
-  $ cdap-cli.sh send stream trafficEvents \"1N1, now, VEHICLE, 10\"
-  $ cdap-cli.sh send stream trafficEvents \"1N2, now, VEHICLE, 101\"
-  $ cdap-cli.sh send stream trafficEvents \"1N3, now, ACCIDENT, 1\"
-
-We can now start the TrafficConditions service and check the service
-calls::
-
-  $ cdap-cli.sh start service TrafficApp.TrafficConditions
-
-Since the service methods are exposed as a RESTful API, we can check the
-results using the curl command::
-
-  $ export SERVICE_URL=http://localhost:10000/v3/namespaces/default/apps/TrafficApp/services/TrafficConditions/methods
-  $ curl -w'\n' $SERVICE_URL/v1/road/1N1/recent
-  $ curl -w'\n' $SERVICE_URL/v1/road/1N2/recent
-  $ curl -w'\n' $SERVICE_URL/v1/road/1N3/recent
+Next, we will send some sample weblogs into the stream for processing::
   
-Example output::
+  $ cdap-cli.sh load stream weblogs resources/accesslog.txt
 
-    GREEN
-    YELLOW
-    RED
+As data getting processed we can start querying it via RESTful APIs 
+provided by CubeService. For convenience, we’ve put the queries themselves
+into separate JSON files.
 
-or, using the CDAP CLI:
+Explore and Query Cube
+----------------------
 
-  $ cdap-cli.sh call service TrafficApp.TrafficConditions GET 'v1/road/1N1/recent'
-  $ cdap-cli.sh call service TrafficApp.TrafficConditions GET 'v1/road/1N2/recent'
-  $ cdap-cli.sh call service TrafficApp.TrafficConditions GET 'v1/road/1N3/recent'
 
-+======================================================================================+
-| status        | headers                            | body size      | body           |
-+======================================================================================+
-| 200           | Content-Length : 5                 | 5              | GREEN          |
-|               | Connection : keep-alive            |                |                |
-|               | Content-Type : text/plain; charset |                |                |
-|               | =UTF-8                             |                |                |
-+======================================================================================+
-
-Congratulations! You have now learned how to incorporate timeseries data
-into your CDAP applications. Please continue to experiment and extend
-this sample application. The ability to store and query time-based data
-can be a powerful tool in many scenarios.
-
-Extend This Example
-===================
-
-- Write a MapReduce job to look at traffic volume over the last 30 days
-  and store the average traffic volume for each 15 minute time slot in the
-  day into another data set. 
-- Modify the ``TrafficService`` to look at the average traffic volumes and use these to
-  identify when traffic is congested.
 
 Share and Discuss!
 ==================
