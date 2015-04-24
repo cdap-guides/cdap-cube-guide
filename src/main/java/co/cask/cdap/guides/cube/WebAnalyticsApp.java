@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Cask Data, Inc.
+ * Copyright © 2015 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -29,7 +29,7 @@ public class WebAnalyticsApp extends AbstractApplication {
   static final String APP_DESCRIPTION = "Data Analysis with an OLAP Cube";
   static final String STREAM_NAME = "weblogs";
   static final String CUBE_NAME = "weblogsCube";
-  static final String SERVICE_NAME = "CubeService";
+  static final String SERVICE_NAME = CubeService.SERVICE_NAME;
 
   @Override
   public void configure() {
@@ -47,6 +47,6 @@ public class WebAnalyticsApp extends AbstractApplication {
     createDataset(CUBE_NAME, Cube.class, props);
 
     addFlow(new CubeWriterFlow());
-    addService(SERVICE_NAME, new CubeHandler());
+    addService(new CubeService());
   }
 }

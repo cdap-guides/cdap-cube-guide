@@ -96,7 +96,7 @@ and overrides the ``configure()`` method to define all of the application compon
     static final String APP_DESCRIPTION = "Data Analysis with an OLAP Cube";
     static final String STREAM_NAME = "weblogs";
     static final String CUBE_NAME = "weblogsCube";
-    static final String SERVICE_NAME = "CubeService";
+    static final String SERVICE_NAME = CubeService.SERVICE_NAME;
   
     @Override
     public void configure() {
@@ -113,7 +113,7 @@ and overrides the ``configure()`` method to define all of the application compon
       createDataset(CUBE_NAME, Cube.class, props);
   
       addFlow(new CubeWriterFlow());
-      addService(SERVICE_NAME, new CubeHandler());
+      addService(new CubeService());
     }
   }
 
@@ -241,7 +241,8 @@ of data sent.
 CubeService
 ...........
 
-The ``CubeService`` added to the Application is constructed using a single handler:
+The ``CubeService`` added to the Application is constructed using a single handler, 
+``CubeHandler``:
 
 .. code:: java
 
@@ -311,7 +312,7 @@ for the tag values that are available in the Cube with this ``CubeExploreQuery``
 
 Submit::
 
-  $ curl -w'\n' -X POST -d @resources/search-first.json "http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/searchTag"
+  $ curl -w'\n' -X POST -d @resources/search-first.json 'http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/searchTag'
 
 The result will be the tag values of the first tags defined in all aggregations (reformatted
 for readability):
@@ -355,7 +356,7 @@ To drill down further into the tag hierarchy of aggregations, let’s refine the
 
 Submit::
 
-  $ curl -w'\n' -X POST -d @resources/search-ip.json "http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/searchTag"
+  $ curl -w'\n' -X POST -d @resources/search-ip.json 'http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/searchTag'
 
 The result is the tag values of the next tag defined in Cube aggregations:
 
@@ -370,7 +371,7 @@ The result is the tag values of the next tag defined in Cube aggregations:
 
 The Cube search API allows you to query for available measures via the ``searchMeasure`` endpoint::
 
-  $ curl -w'\n' -X POST -d @resources/search-ip.json "http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/searchMeasure"
+  $ curl -w'\n' -X POST -d @resources/search-ip.json 'http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/searchMeasure'
 
 The result contains all the measurement names:
 
@@ -411,7 +412,7 @@ One way of reading the query definition is this analogous SQL command:
 
 Submit::
 
-  $ curl -w'\n' -X POST -d @resources/query-ip-browser.json "http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/query"
+  $ curl -w'\n' -X POST -d @resources/query-ip-browser.json 'http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/query'
 
 The result is a timeseries with one data point (if any are available) per hour:
 
@@ -478,7 +479,7 @@ The query below will help to analyse the number of errors (or invalid requests) 
 
 Submit::
 
-  $ curl -w'\n' -X POST -d @resources/query-response-status.json "http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/query"
+  $ curl -w'\n' -X POST -d @resources/query-response-status.json 'http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/query'
 
 The result is a multiple timeseries for each response status:
 
@@ -583,7 +584,7 @@ We don’t want to store extra aggregates in the fact where this is the case.
 
 Let’s update the dataset configuration, and then restart both the Flow and the Service so that the change takes effect::
 
-  $ curl -w'\n' -X PUT -d @resources/cube-config.json "http://localhost:10000/v3/namespaces/default/data/datasets/weblogsCube/properties"
+  $ curl -w'\n' -X PUT -d @resources/cube-config.json 'http://localhost:10000/v3/namespaces/default/data/datasets/weblogsCube/properties'
   $ cdap-cli.sh stop flow WebAnalyticsApp.CubeWriterFlow
   $ cdap-cli.sh start flow WebAnalyticsApp.CubeWriterFlow
   $ cdap-cli.sh stop service WebAnalyticsApp.CubeService
@@ -611,7 +612,7 @@ Now, we can retrieve statistics on referrers using the newly-added aggregation:
 
 Submit::
   
-  $ curl -w'\n' -X POST -d @resources/query-referrer.json "http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/query"
+  $ curl -w'\n' -X POST -d @resources/query-referrer.json 'http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/query'
 
 Result:
 
