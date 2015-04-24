@@ -62,7 +62,7 @@ storing and retrieving the data.
 
 The application consists of these components:
 
-.. image:: docs/img/app-design.png
+.. image:: docs/images/app-design.png
    :width: 8in
    :align: center
 
