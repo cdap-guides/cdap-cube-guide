@@ -29,7 +29,7 @@ public class CubeWriterFlow implements Flow {
   public FlowSpecification configure() {
     return FlowSpecification.Builder.with()
       .setName(FLOW_NAME)
-      .setDescription("Reads logs from stream and writes them to a Cube dataset")
+      .setDescription("Reads logs from a Stream and writes them to a Cube dataset")
       .withFlowlets()
         .add("writer", new CubeWriterFlowlet())
       .connect()
