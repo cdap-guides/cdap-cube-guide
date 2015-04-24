@@ -96,7 +96,6 @@ and overrides the ``configure()`` method to define all of the application compon
     static final String APP_DESCRIPTION = "Data Analysis with an OLAP Cube";
     static final String STREAM_NAME = "weblogs";
     static final String CUBE_NAME = "weblogsCube";
-    static final String SERVICE_NAME = CubeService.SERVICE_NAME;
   
     @Override
     public void configure() {

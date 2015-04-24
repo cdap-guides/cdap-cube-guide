@@ -29,7 +29,6 @@ public class WebAnalyticsApp extends AbstractApplication {
   static final String APP_DESCRIPTION = "Data Analysis with an OLAP Cube";
   static final String STREAM_NAME = "weblogs";
   static final String CUBE_NAME = "weblogsCube";
-  static final String SERVICE_NAME = CubeService.SERVICE_NAME;
 
   @Override
   public void configure() {
