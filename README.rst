@@ -83,7 +83,7 @@ Maven project structure for all of the source code files::
     ./src/main/java/co/cask/cdap/guides/cube/WebAnalyticsApp.java
     ./src/main/java/co/cask/cdap/guides/cube/CubeWriterFlow.java
     ./src/main/java/co/cask/cdap/guides/cube/CubeWriterFlowlet.java
-    ./src/main/java/co/cask/cdap/guides/cube/CubeHandler.java
+    ./src/main/java/co/cask/cdap/guides/cube/CubeService.java
 
 The application is identified by the ``WebAnalyticsApp`` class. This class extends 
 `AbstractApplication <http://docs.cdap.io/cdap/current/en/reference-manual/javadocs/co/cask/cdap/api/app/AbstractApplication.html>`__,
@@ -134,13 +134,13 @@ look at the properties that are used to configure the Cube dataset:
     .add("dataset.cube.aggregation.agg2.tags", "ip,browser")
 
 A Cube dataset can compute aggregates for multiple time resolutions to provide 
-a better view of data for both small and big time ranges. For example, you may want to see 
+a better view of data for both small and large time ranges. For example, you may want to see 
 data points for each second for the last five minutes, while to build a sensible 
 chart for a report that covers a week, you may need to see per-hour aggregations. 
 
 The code above defines three resolutions: 1 second, 1 minute (60 seconds), 
 and 1 hour (3600 seconds). When querying the Cube data, you can specify any of 
-these three, depending on your need.
+these three depending on your need.
 
 Each aggregation in a Cube is defined by a list of tags, which can later be used 
 for querying. The above code defines two aggregations: “agg1” and agg2”. The first 
@@ -259,7 +259,7 @@ The ``CubeService`` added to the Application is constructed using a single handl
 The ``AbstractCubeHttpHandler`` that is provided out-of-the-box with CDAP handles basic 
 Cube methods, such as *add*, *searchTag*, *searchMeasure*, and *query*, while the subclass 
 only needs to return the Cube dataset itself. Below, we will see how to use the HTTP 
-interface of the service.
+interface of the Service.
 
 
 Build and Run Application
@@ -552,8 +552,8 @@ The result is a multiple timeseries for each response status:
       }
   ]
 
-We can see there are just a few "404" responses, which is likely normal, for such a
-well-managed website.
+We can see there are just a few "404" responses, which is likely normal for such a
+well-managed website(!).
 
 Changing the Cube Configuration
 -------------------------------
@@ -562,7 +562,7 @@ As applications evolve, we may need to change the Cube aggregation configuration
 support new queries or to optimize existing ones. Let’s see how you can add an 
 aggregation to an existing Cube.
 
-We’d like the changed configuration to include these properties:
+We’d like the configuration changed to include these properties:
 
 .. code:: json
 
