@@ -90,26 +90,26 @@ and overrides the ``configure()`` method to define all of the application compon
 
   public class WebAnalyticsApp extends AbstractApplication {
     static final String APP_NAME = "WebAnalyticsApp";
-    static final String APP_DESCRIPTION = "Data Analysis with an OLAP Cube";
     static final String STREAM_NAME = "weblogs";
     static final String CUBE_NAME = "weblogsCube";
-  
+    static final String SERVICE_NAME = "CubeService";
+
     @Override
     public void configure() {
       setName(APP_NAME);
-      setDescription(APP_DESCRIPTION);
-  
+
       addStream(new Stream(STREAM_NAME));
-  
+
+      // configure the Cube dataset
       DatasetProperties props = DatasetProperties.builder()
         .add("dataset.cube.resolutions", "1,60,3600")
         .add("dataset.cube.aggregation.agg1.dimensions", "response_status")
         .add("dataset.cube.aggregation.agg2.dimensions", "ip,browser")
         .build();
       createDataset(CUBE_NAME, Cube.class, props);
-  
+
       addFlow(new CubeWriterFlow());
-      addService(new CubeService());
+      addService(SERVICE_NAME, new CubeHandler());
     }
   }
 
