@@ -5,7 +5,7 @@
     "endTs":   1423398198,
     "measureNames": ["bytes.sent"],
     "measureType": "COUNTER",
-    "sliceByTagValues": {"ip": "69.181.160.120"},
-    "groupByTags": ["browser"],
+    "dimensionValues": {"ip": "69.181.160.120"},
+    "groupByDimensions": ["browser"],
     "limit": 1000
 }

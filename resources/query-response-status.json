@@ -5,7 +5,7 @@
     "measureNames": ["count"],
     "measureType": "COUNTER",
     "resolution": 3600,
-    "sliceByTagValues": {},
-    "groupByTags": ["response_status"],
+    "dimensionValues": {},
+    "groupByDimensions": ["response_status"],
     "limit": 1000
 }

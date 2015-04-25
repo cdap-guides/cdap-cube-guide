@@ -5,7 +5,7 @@
     "measureNames": ["count"],
     "measureType": "COUNTER",
     "resolution": 3600,
-    "sliceByTagValues": {"referrer": "http://cdap.io/"},
-    "groupByTags": [],
+    "dimensionValues": {"referrer": "http://cdap.io/"},
+    "groupByDimensions": [],
     "limit": 1000
 }
