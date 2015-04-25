@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Cask Data, Inc.
+ * Copyright © 2015 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -29,7 +29,7 @@ public class CubeWriterFlow implements Flow {
   public FlowSpecification configure() {
     return FlowSpecification.Builder.with()
       .setName(FLOW_NAME)
-      .setDescription("Reads logs from stream and writes them to a Cube dataset")
+      .setDescription("Reads logs from a Stream and writes them to a Cube dataset")
       .withFlowlets()
         .add("writer", new CubeWriterFlowlet())
       .connect()
