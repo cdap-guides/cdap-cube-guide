@@ -39,8 +39,8 @@ public class WebAnalyticsApp extends AbstractApplication {
     // configure the Cube dataset
     DatasetProperties props = DatasetProperties.builder()
       .add("dataset.cube.resolutions", "1,60,3600")
-      .add("dataset.cube.aggregation.agg1.tags", "response_status")
-      .add("dataset.cube.aggregation.agg2.tags", "ip,browser")
+      .add("dataset.cube.aggregation.agg1.dimensions", "response_status")
+      .add("dataset.cube.aggregation.agg2.dimensions", "ip,browser")
       .build();
     createDataset(CUBE_NAME, Cube.class, props);
 

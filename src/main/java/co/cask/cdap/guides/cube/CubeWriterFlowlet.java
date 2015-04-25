@@ -71,13 +71,13 @@ public class CubeWriterFlowlet extends AbstractFlowlet {
     CubeFact fact = new CubeFact(ts / 1000);
 
     // adding tags (dimensions)
-    fact.addTag("ip", matcher.group(1));
-    fact.addTag("request", matcher.group(5));
-    fact.addTag("response_status", matcher.group(6));
+    fact.addDimensionValue("ip", matcher.group(1));
+    fact.addDimensionValue("request", matcher.group(5));
+    fact.addDimensionValue("response_status", matcher.group(6));
     if (!matcher.group(8).equals("-")) {
-      fact.addTag("referrer", matcher.group(8));
+      fact.addDimensionValue("referrer", matcher.group(8));
     }
-    fact.addTag("browser", matcher.group(9));
+    fact.addDimensionValue("browser", matcher.group(9));
 
     // adding measurements
     fact.addMeasurement("count", MeasureType.COUNTER, 1);
