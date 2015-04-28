@@ -16,10 +16,10 @@
 
 package co.cask.cdap.guides.cube;
 
+import co.cask.cdap.api.dataset.lib.cube.AggregationFunction;
 import co.cask.cdap.api.dataset.lib.cube.CubeExploreQuery;
 import co.cask.cdap.api.dataset.lib.cube.CubeQuery;
 import co.cask.cdap.api.dataset.lib.cube.DimensionValue;
-import co.cask.cdap.api.dataset.lib.cube.MeasureType;
 import co.cask.cdap.api.dataset.lib.cube.TimeSeries;
 import co.cask.cdap.api.dataset.lib.cube.TimeValue;
 import co.cask.cdap.api.metrics.RuntimeMetrics;
@@ -43,7 +43,6 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -112,10 +111,16 @@ public class WebAnalyticsAppTest extends TestBase {
         Assert.assertEquals("count", mesIt.next());
 
         // query for data
-        Collection<TimeSeries> data =
-          query(url, new CubeQuery("agg1", tsInSec - 60, tsInSec + 60, 1, 100,
-                                   "count", MeasureType.COUNTER,
-                                   new HashMap<String, String>(), new ArrayList<String>()));
+        CubeQuery query = CubeQuery.builder()
+          .select()
+            .measurement("count", AggregationFunction.SUM)
+          .from("agg1")
+            .resolution(1, TimeUnit.SECONDS)
+          .where()
+            .timeRange(tsInSec - 60, tsInSec + 60)
+          .limit(100)
+          .build();
+        Collection<TimeSeries> data = query(url, query);
         Assert.assertEquals(1, data.size());
         TimeSeries series = data.iterator().next();
         List<TimeValue> timeValues = series.getTimeValues();
