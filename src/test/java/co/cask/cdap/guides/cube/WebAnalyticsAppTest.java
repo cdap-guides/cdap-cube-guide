@@ -18,11 +18,12 @@ package co.cask.cdap.guides.cube;
 
 import co.cask.cdap.api.dataset.lib.cube.CubeExploreQuery;
 import co.cask.cdap.api.dataset.lib.cube.CubeQuery;
+import co.cask.cdap.api.dataset.lib.cube.DimensionValue;
 import co.cask.cdap.api.dataset.lib.cube.MeasureType;
-import co.cask.cdap.api.dataset.lib.cube.TagValue;
 import co.cask.cdap.api.dataset.lib.cube.TimeSeries;
 import co.cask.cdap.api.dataset.lib.cube.TimeValue;
 import co.cask.cdap.api.metrics.RuntimeMetrics;
+import co.cask.cdap.api.metrics.TagValue;
 import co.cask.cdap.test.ApplicationManager;
 import co.cask.cdap.test.FlowManager;
 import co.cask.cdap.test.RuntimeStats;
@@ -89,22 +90,22 @@ public class WebAnalyticsAppTest extends TestBase {
 
         // search for tags
         Collection<TagValue> tags =
-          searchTag(url, new CubeExploreQuery(tsInSec - 60, tsInSec + 60, 1, 100, new ArrayList<TagValue>()));
+          searchTag(url, new CubeExploreQuery(tsInSec - 60, tsInSec + 60, 1, 100, new ArrayList<DimensionValue>()));
         Assert.assertEquals(3, tags.size());
         Iterator<TagValue> iterator = tags.iterator();
         TagValue tv = iterator.next();
-        Assert.assertEquals("ip", tv.getTagName());
+        Assert.assertEquals("ip", tv.getName());
         Assert.assertEquals("69.181.160.120", tv.getValue());
         tv = iterator.next();
-        Assert.assertEquals("response_status", tv.getTagName());
+        Assert.assertEquals("response_status", tv.getName());
         Assert.assertEquals("200", tv.getValue());
         tv = iterator.next();
-        Assert.assertEquals("response_status", tv.getTagName());
+        Assert.assertEquals("response_status", tv.getName());
         Assert.assertEquals("500", tv.getValue());
 
         // search for measures
         Collection<String> measures =
-          searchMeasure(url, new CubeExploreQuery(tsInSec - 60, tsInSec + 60, 1, 100, new ArrayList<TagValue>()));
+          searchMeasure(url, new CubeExploreQuery(tsInSec - 60, tsInSec + 60, 1, 100, new ArrayList<DimensionValue>()));
         Assert.assertEquals(2, measures .size());
         Iterator<String> mesIt = measures.iterator();
         Assert.assertEquals("bytes.sent", mesIt.next());
@@ -133,7 +134,7 @@ public class WebAnalyticsAppTest extends TestBase {
   }
 
   private Collection<TagValue> searchTag(URL serviceUrl, CubeExploreQuery query) throws IOException {
-    URL url = new URL(serviceUrl, "searchTag");
+    URL url = new URL(serviceUrl, "searchDimensionValue");
     HttpRequest request = HttpRequest.post(url).withBody(GSON.toJson(query)).build();
     HttpResponse response = HttpRequests.execute(request);
     Assert.assertEquals(200, response.getResponseCode());

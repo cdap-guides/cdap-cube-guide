@@ -5,7 +5,8 @@ Data Analysis with OLAP Cube
 The `Cask Data Application Platform (CDAP) <http://cdap.io>`__ provides a number of
 pre-packaged Datasets, which make it easy to store and retrieve data using
 best-practices-based implementations of common data access patterns. In this guide, you
-will learn how to store multidimensional data points in a Cube dataset, and then perform
+will learn how to store multidimensional data points in a Cube dataset
+(see `OLAP Cube <http://en.wikipedia.org/wiki/OLAP_cube>`__), and then perform
 queries with it. For analysis, we’ll be using an example of processing web logs.
 
 An OLAP (Online Analytical Processing) Cube is multidimensional database or array,
@@ -103,14 +104,15 @@ and overrides the ``configure()`` method to define all of the application compon
       setDescription(APP_DESCRIPTION);
   
       addStream(new Stream(STREAM_NAME));
-  
+
+      // configure the Cube dataset
       DatasetProperties props = DatasetProperties.builder()
         .add("dataset.cube.resolutions", "1,60,3600")
-        .add("dataset.cube.aggregation.agg1.tags", "response_status")
-        .add("dataset.cube.aggregation.agg2.tags", "ip,browser")
+        .add("dataset.cube.aggregation.agg1.dimensions", "response_status")
+        .add("dataset.cube.aggregation.agg2.dimensions", "ip,browser")
         .build();
       createDataset(CUBE_NAME, Cube.class, props);
-  
+
       addFlow(new CubeWriterFlow());
       addService(new CubeService());
     }
@@ -123,14 +125,14 @@ the application name and description, our ``WebAnalyticsApp`` adds a new
 `Stream <http://docs.cdap.io/cdap/current/en/developers-manual/building-blocks/streams.html>`__.
 
 Then, the application configures a Cube dataset to compute and store 
-aggregations for combinations of dimensions (also known as *tags*). Let’s take a closer 
+aggregations for combinations of dimensions. Let’s take a closer
 look at the properties that are used to configure the Cube dataset:
 
 .. code:: java
 
     .add("dataset.cube.resolutions", "1,60,3600")
-    .add("dataset.cube.aggregation.agg1.tags", "response_status")
-    .add("dataset.cube.aggregation.agg2.tags", "ip,browser")
+    .add("dataset.cube.aggregation.agg1.dimensions", "response_status")
+    .add("dataset.cube.aggregation.agg2.dimensions", "ip,browser")
 
 A Cube dataset can compute aggregates for multiple time resolutions to provide 
 a better view of data for both small and large time ranges. For example, you may want to see 
@@ -141,13 +143,13 @@ The code above defines three resolutions: 1 second, 1 minute (60 seconds),
 and 1 hour (3600 seconds). When querying the Cube data, you can specify any of 
 these three depending on your need.
 
-Each aggregation in a Cube is defined by a list of tags, which can later be used 
+Each aggregation in a Cube is defined by a list of dimensions, which can later be used
 for querying. The above code defines two aggregations: “agg1” and agg2”. The first 
-has only one tag: *response_status*. Thus, the Cube will allow queries such as 
+has only one dimension: *response_status*. Thus, the Cube will allow queries such as
 “number of requests that had a response status 200” or “number of requests for 
 each response status”.
 
-The second aggregation (“agg2”) defines two tags: *ip* and *browser*, which allows 
+The second aggregation (“agg2”) defines two dimensions: *ip* and *browser*, which allows
 querying by ip, by browser, or by using both together, as we shall see below.
 
 After the Cube dataset is configured, the application adds a ``CubeWriterFlow`` to compute
@@ -163,7 +165,7 @@ CubeWriterFlow
 
   public class CubeWriterFlow implements Flow {
     static final String FLOW_NAME = "CubeWriterFlow";
-  
+
     @Override
     public FlowSpecification configure() {
       return FlowSpecification.Builder.with()
@@ -185,44 +187,43 @@ The Flow configures a single ``CubeWriterFlowlet`` to consume data from a Stream
     private static final Pattern CLF_PATTERN =
       Pattern.compile("^([\\d.]+) (\\S+) (\\S+) \\[([\\w:/]+\\s[+\\-]\\d{4})\\] " +
                         "\"(.+?)\" (\\d{3}) (\\d+) \"([^\"]+)\" \"([^\"]+)\"");
-  
+
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("dd/MMM/yyyy:HH:mm:ss Z");
-  
+
     private Metrics metrics;
-  
+
     @UseDataSet(WebAnalyticsApp.CUBE_NAME)
     private Cube cube;
-  
+
     @ProcessInput
     public void process(StreamEvent event) throws Exception {
-  
+
       String logEntryLine = Bytes.toString(event.getBody());
-  
+
       Pattern p = CLF_PATTERN;
       Matcher matcher = p.matcher(logEntryLine);
       if (!matcher.matches()) {
         metrics.count("parse.errors", 1);
         return;
       }
-  
+
       // creating CubeFact with timestamp of the log record
       long ts = DATE_FORMAT.parse(matcher.group(4)).getTime();
       CubeFact fact = new CubeFact(ts / 1000);
-  
-      // adding tags (dimensions)
-      fact.addTag("ip", matcher.group(1));
-      fact.addTag("request", matcher.group(5));
-      fact.addTag("response_status", matcher.group(6));
+
+      // adding dimensions
+      fact.addDimensionValue("ip", matcher.group(1));
+      fact.addDimensionValue("request", matcher.group(5));
+      fact.addDimensionValue("response_status", matcher.group(6));
       if (!matcher.group(8).equals("-")) {
-        fact.addTag("referrer", matcher.group(8));
+        fact.addDimensionValue("referrer", matcher.group(8));
       }
-      fact.addTag("browser", matcher.group(9));
-  
+      fact.addDimensionValue("browser", matcher.group(9));
+
       // adding measurements
       fact.addMeasurement("count", MeasureType.COUNTER, 1);
       Integer bytesSent = Integer.valueOf(matcher.group(7));
       fact.addMeasurement("bytes.sent", MeasureType.COUNTER, bytesSent);
-    
       cube.add(fact);
     }
   }
@@ -232,7 +233,7 @@ annotation with the specified dataset name. It reports on parsing errors by util
 Metrics field injected by the CDAP framework.
 
 The Flowlet process method parses the body of the ``StreamEvent`` that contains a log
-entry in a combined log format. Then, it constructs a CubeFact by adding tags using the
+entry in a combined log format. Then, it constructs a CubeFact by adding dimensions using the
 parsed field values. It adds two measurements to be computed by the Cube in every
 aggregation: the “count” for the number of requests, and the “bytes.sent” for the amount
 of data sent.
@@ -248,15 +249,16 @@ The ``CubeService`` added to the Application is constructed using a single handl
   public final class CubeHandler extends AbstractCubeHttpHandler {
     @UseDataSet(WebAnalyticsApp.CUBE_NAME)
     private Cube cube;
-  
+
     @Override
     protected Cube getCube() {
       return cube;
     }
   }
 
+
 The ``AbstractCubeHttpHandler`` that is provided out-of-the-box with CDAP handles basic 
-Cube methods, such as *add*, *searchTag*, *searchMeasure*, and *query*, while the subclass 
+Cube methods, such as *add*, *searchDimensionValue*, *searchMeasure*, and *query*, while the subclass
 only needs to return the Cube dataset itself. Below, we will see how to use the HTTP 
 interface of the Service.
 
@@ -297,7 +299,7 @@ Explore and Query Cube
 
 Many times, users may not know what data a Cube contains and require some 
 exploration first to construct the queries themselves. Let’s start by searching 
-for the tag values that are available in the Cube with this ``CubeExploreQuery``:
+for the dimension values that are available in the Cube with this ``CubeExploreQuery``:
 
 .. code:: json
 
@@ -305,15 +307,15 @@ for the tag values that are available in the Cube with this ``CubeExploreQuery``
       "startTs": 1423370200,
       "endTs":   1423398198,
       "resolution": 3600,
-      "tagValues": [],
+      "dimensionValues": [],
       "limit": 1000
   }
 
 Submit::
 
-  $ curl -w'\n' -X POST -d @resources/search-first.json 'http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/searchTag'
+  $ curl -w'\n' -X POST -d @resources/search-first.json 'http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/searchDimensionValue'
 
-The result will be the tag values of the first tags defined in all aggregations (reformatted
+The result will be the dimension values of the first dimensions defined in all aggregations (reformatted
 for readability):
 
 .. code:: json
@@ -341,7 +343,7 @@ for readability):
       }
   ]
 
-To drill down further into the tag hierarchy of aggregations, let’s refine the query with a specific tag value:
+To drill down further into the dimension hierarchy of aggregations, let’s refine the query with a specific dimension value:
 
 .. code:: json
 
@@ -349,15 +351,15 @@ To drill down further into the tag hierarchy of aggregations, let’s refine the
       "startTs": 1423370200,
       "endTs":   1423398198,
       "resolution": 3600,
-      "tagValues": [{"name": "ip", "value": "69.181.160.120"}],
+      "dimensionValues": [{"name": "ip", "value": "69.181.160.120"}],
       "limit": 1000
   }
 
 Submit::
 
-  $ curl -w'\n' -X POST -d @resources/search-ip.json 'http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/searchTag'
+  $ curl -w'\n' -X POST -d @resources/search-ip.json 'http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/searchDimensionValue'
 
-The result is the tag values of the next tag defined in Cube aggregations:
+The result is the dimension values of the next dimension defined in Cube aggregations:
 
 .. code:: json
 
@@ -393,8 +395,8 @@ number of bytes sent for a specific source ip, per each browser type:
       "endTs":   1423398198,
       "measureNames": ["bytes.sent"],
       "measureType": "COUNTER",
-      "sliceByTagValues": {"ip": "69.181.160.120"},
-      "groupByTags": ["browser"],
+      "dimensionValues": {"ip": "69.181.160.120"},
+      "groupByDimensions": ["browser"],
       "limit": 1000
   }
 
@@ -404,10 +406,10 @@ One way of reading the query definition is this analogous SQL command:
 
    SELECT    count('bytes.sent')               -- measure name and type
    FROM      agg2.1h_res                       -- aggregation & resolution
-   GROUP BY  browser                           -- groupByTags
-   WHERE     ip='69.181.160.120' AND           -- sliceByTags
+   GROUP BY  browser                           -- groupByDimensions
+   WHERE     ip='69.181.160.120' AND           -- dimensionValues
              ts>=1423370200 AND ts<1423398198  -- startTs & endTs
-   LIMIT     100                               -- limit
+   LIMIT     1000                              -- limit
 
 Submit::
 
@@ -420,7 +422,7 @@ The result is a timeseries with one data point (if any are available) per hour:
   [
       {
           "measureName": "bytes.sent",
-          "tagValues": {
+          "dimensionValues": {
               "browser": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2125.122 Safari/537.36"
           },
           "timeValues": [
@@ -471,8 +473,8 @@ The query below will help to analyse the number of errors (or invalid requests) 
       "measureNames": ["count"],
       "measureType": "COUNTER",
       "resolution": 3600,
-      "sliceByTagValues": {},
-      "groupByTags": ["response_status"],
+      "dimensionValues": {},
+      "groupByDimensions": ["response_status"],
       "limit": 1000
   }
 
@@ -487,7 +489,7 @@ The result is a multiple timeseries for each response status:
   [
       {
           "measureName": "count",
-          "tagValues": {
+          "dimensionValues": {
               "response_status": "200"
           },
           "timeValues": [
@@ -527,7 +529,7 @@ The result is a multiple timeseries for each response status:
       },
       {
           "measureName": "count",
-          "tagValues": {
+          "dimensionValues": {
               "response_status": "404"
           },
           "timeValues": [
@@ -569,15 +571,15 @@ We’d like the configuration changed to include these properties:
       "typeName":"co.cask.cdap.api.dataset.lib.cube.Cube",
       "properties": {
           "dataset.cube.resolutions":"1,60,3600",
-          "dataset.cube.aggregation.agg1.tags":"response_status",
-          "dataset.cube.aggregation.agg2.tags":"ip,browser",
-          "dataset.cube.aggregation.agg3.tags":"referrer",
-          "dataset.cube.aggregation.agg3.requiredTags":"referrer"
+          "dataset.cube.aggregation.agg1.dimensions":"response_status",
+          "dataset.cube.aggregation.agg2.dimensions":"ip,browser",
+          "dataset.cube.aggregation.agg3.dimensions":"referrer",
+          "dataset.cube.aggregation.agg3.requiredDimensions":"referrer"
       }
   }
 
 We’ve added *agg3* that computes statistics for referrers. Note the extra property that ends 
-with *requiredTags*: it specifies to only use this aggregation if the required tag is present in a CubeFact.
+with *requiredDimensions*: it specifies to only use this aggregation if the required dimension is present in a CubeFact.
 You may have noticed that in ``CubeWriterFlowlet``, the referrer field may be empty in a log entry. 
 We don’t want to store extra aggregates in the fact where this is the case.
 
@@ -604,8 +606,8 @@ Now, we can retrieve statistics on referrers using the newly-added aggregation:
       "measureNames": ["count"],
       "measureType": "COUNTER",
       "resolution": 3600,
-      "sliceByTagValues": {"referrer": "http://cdap.io/"},
-      "groupByTags": [],
+      "dimensionValues": {"referrer": "http://cdap.io/"},
+      "groupByDimensions": [],
       "limit": 1000
   }
 
@@ -620,7 +622,7 @@ Result:
   [
       {
           "measureName": "count",
-          "tagValues": {},
+          "dimensionValues": {},
           "timeValues": [
               {
                   "timestamp": 1423375200,
