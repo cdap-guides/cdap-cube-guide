@@ -3,8 +3,7 @@
     "resolution": 3600,
     "startTs": 1423370200,
     "endTs":   1423398198,
-    "measureNames": ["bytes.sent"],
-    "measureType": "COUNTER",
+    "measurements": {"bytes.sent": "SUM"},
     "dimensionValues": {"ip": "69.181.160.120"},
     "groupByDimensions": ["browser"],
     "limit": 1000
