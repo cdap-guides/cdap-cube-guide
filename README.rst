@@ -388,8 +388,7 @@ number of bytes sent for a specific source ip, per each browser type:
       "resolution": 3600,
       "startTs": 1423370200,
       "endTs":   1423398198,
-      "measureNames": ["bytes.sent"],
-      "measureType": "COUNTER",
+      "measurements": {"bytes.sent": "SUM"},
       "dimensionValues": {"ip": "69.181.160.120"},
       "groupByDimensions": ["browser"],
       "limit": 1000
@@ -399,7 +398,7 @@ One way of reading the query definition is this analogous SQL command:
 
 .. code:: sql
 
-   SELECT    count('bytes.sent')               -- measure name and type
+   SELECT    sum('bytes.sent')                 -- measure name and aggregation function
    FROM      agg2.1h_res                       -- aggregation & resolution
    GROUP BY  browser                           -- groupByDimensions
    WHERE     ip='69.181.160.120' AND           -- dimensionValues
@@ -465,8 +464,7 @@ The query below will help to analyse the number of errors (or invalid requests) 
       "aggregation": "agg1",
       "startTs": 1423370200,
       "endTs":   1423398198,
-      "measureNames": ["count"],
-      "measureType": "COUNTER",
+      "measurements": {"count": "SUM"},
       "resolution": 3600,
       "dimensionValues": {},
       "groupByDimensions": ["response_status"],
@@ -598,8 +596,7 @@ Now, we can retrieve statistics on referrers using the newly-added aggregation:
       "aggregation": "agg3",
       "startTs": 1423370200,
       "endTs":   1423398198,
-      "measureNames": ["count"],
-      "measureType": "COUNTER",
+      "measurements": {"count": "SUM"},
       "resolution": 3600,
       "dimensionValues": {"referrer": "http://cdap.io/"},
       "groupByDimensions": [],
