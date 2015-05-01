@@ -9,6 +9,9 @@ will learn how to store multidimensional data points in a Cube dataset
 (see `OLAP Cube <http://en.wikipedia.org/wiki/OLAP_cube>`__), and then perform
 queries with it. For analysis, we’ll be using an example of processing web logs.
 
+An OLAP (Online Analytical Processing) Cube is multidimensional database or array,
+optimized for data warehousing and OLAP applications.
+
 What You Will Build
 ===================
 
@@ -34,8 +37,8 @@ insights on the traffic of a web site and the web site’s health. You will:
 What You Will Need
 ==================
 
-- `JDK 6 or JDK 7 <http://www.oracle.com/technetwork/java/javase/downloads/index.html>`__
-- `Apache Maven 3.0+ <http://maven.apache.org/>`__
+- `JDK 7 <http://www.oracle.com/technetwork/java/javase/downloads/index.html>`__
+- `Apache Maven 3.1+ <http://maven.apache.org/>`__
 - `CDAP SDK <http://docs.cdap.io/cdap/current/en/developers-manual/getting-started/standalone/index.html>`__
 
 Let’s Build It!
@@ -53,9 +56,10 @@ For this guide we will assume we are processing logs of a web-site that are prod
 Apache web server. The data could be collected from multiple servers and then sent to our
 application over HTTP. There are a number of `tools
 <http://docs.cdap.io/cdap/current/en/developers-manual/ingesting-tools/index.html>`__ that
-can help you with the ingestion task. We’ll skip over the details of ingesting the data, for more
-information on this refer `here
-<http://docs.cask.io/cdap/current/en/examples-manual/index.html>`__).
+can help you with the ingestion task. We’ll skip over the details of ingesting the data
+(as this is `covered elsewhere
+<http://docs.cask.io/cdap/current/en/examples-manual/index.html>`__) and instead focus on
+storing and retrieving the data.
 
 The application consists of these components:
 
@@ -77,10 +81,10 @@ The first step is to set up our application structure. We will use a standard
 Maven project structure for all of the source code files::
 
     ./pom.xml
-    ./src/main/java/co/cask/cdap/guides/cube/WebAnalyticsApp.java
+    ./src/main/java/co/cask/cdap/guides/cube/CubeHandler.java
     ./src/main/java/co/cask/cdap/guides/cube/CubeWriterFlow.java
     ./src/main/java/co/cask/cdap/guides/cube/CubeWriterFlowlet.java
-    ./src/main/java/co/cask/cdap/guides/cube/CubeHandler.java
+    ./src/main/java/co/cask/cdap/guides/cube/WebAnalyticsApp.java
 
 The application is identified by the ``WebAnalyticsApp`` class. This class extends 
 `AbstractApplication <http://docs.cdap.io/cdap/current/en/reference-manual/javadocs/co/cask/cdap/api/app/AbstractApplication.html>`__,
@@ -93,11 +97,11 @@ and overrides the ``configure()`` method to define all of the application compon
     static final String STREAM_NAME = "weblogs";
     static final String CUBE_NAME = "weblogsCube";
     static final String SERVICE_NAME = "CubeService";
-
+    
     @Override
     public void configure() {
       setName(APP_NAME);
-
+  
       addStream(new Stream(STREAM_NAME));
 
       // configure the Cube dataset
@@ -116,7 +120,7 @@ and overrides the ``configure()`` method to define all of the application compon
 First, we need a place to receive and process the events. CDAP provides a 
 `real-time stream processing system <http://docs.cdap.io/cdap/current/en/developers-manual/building-blocks/flows-flowlets/index.html>`__
 that is a great match for handling event streams. After first setting 
-the application name, our ``WebAnalyticsApp`` adds a new
+the application name, our ``WebAnalyticsApp`` adds a new 
 `Stream <http://docs.cdap.io/cdap/current/en/developers-manual/building-blocks/streams.html>`__.
 
 Then, the application configures a Cube dataset to compute and store 
@@ -206,7 +210,7 @@ The Flow configures a single ``CubeWriterFlowlet`` to consume data from a Stream
       long ts = DATE_FORMAT.parse(matcher.group(4)).getTime();
       CubeFact fact = new CubeFact(ts / 1000);
 
-      // adding tags (dimensions)
+      // adding dimensions
       fact.addDimensionValue("ip", matcher.group(1));
       fact.addDimensionValue("request", matcher.group(5));
       fact.addDimensionValue("response_status", matcher.group(6));

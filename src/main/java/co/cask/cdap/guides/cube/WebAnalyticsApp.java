@@ -29,7 +29,7 @@ public class WebAnalyticsApp extends AbstractApplication {
   static final String STREAM_NAME = "weblogs";
   static final String CUBE_NAME = "weblogsCube";
   static final String SERVICE_NAME = "CubeService";
-
+  
   @Override
   public void configure() {
     setName(APP_NAME);
