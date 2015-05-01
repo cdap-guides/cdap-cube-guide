@@ -94,7 +94,6 @@ and overrides the ``configure()`` method to define all of the application compon
 
   public class WebAnalyticsApp extends AbstractApplication {
     static final String APP_NAME = "WebAnalyticsApp";
-    static final String APP_DESCRIPTION = "Data Analysis with an OLAP Cube";
     static final String STREAM_NAME = "weblogs";
     static final String CUBE_NAME = "weblogsCube";
     static final String SERVICE_NAME = "CubeService";
@@ -102,7 +101,6 @@ and overrides the ``configure()`` method to define all of the application compon
     @Override
     public void configure() {
       setName(APP_NAME);
-      setDescription(APP_DESCRIPTION);
   
       addStream(new Stream(STREAM_NAME));
 
