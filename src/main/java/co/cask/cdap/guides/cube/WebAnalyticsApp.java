@@ -29,7 +29,8 @@ public class WebAnalyticsApp extends AbstractApplication {
   static final String APP_DESCRIPTION = "Data Analysis with an OLAP Cube";
   static final String STREAM_NAME = "weblogs";
   static final String CUBE_NAME = "weblogsCube";
-
+  static final String SERVICE_NAME = "CubeService";
+  
   @Override
   public void configure() {
     setName(APP_NAME);
@@ -46,6 +47,6 @@ public class WebAnalyticsApp extends AbstractApplication {
     createDataset(CUBE_NAME, Cube.class, props);
 
     addFlow(new CubeWriterFlow());
-    addService(new CubeService());
+    addService(SERVICE_NAME, new CubeHandler());
   }
 }

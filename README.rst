@@ -37,7 +37,7 @@ insights on the traffic of a web site and the web site’s health. You will:
 What You Will Need
 ==================
 
-- `JDK JDK 7 <http://www.oracle.com/technetwork/java/javase/downloads/index.html>`__
+- `JDK 7 <http://www.oracle.com/technetwork/java/javase/downloads/index.html>`__
 - `Apache Maven 3.1+ <http://maven.apache.org/>`__
 - `CDAP SDK <http://docs.cdap.io/cdap/current/en/developers-manual/getting-started/standalone/index.html>`__
 
@@ -81,10 +81,10 @@ The first step is to set up our application structure. We will use a standard
 Maven project structure for all of the source code files::
 
     ./pom.xml
-    ./src/main/java/co/cask/cdap/guides/cube/WebAnalyticsApp.java
+    ./src/main/java/co/cask/cdap/guides/cube/CubeHandler.java
     ./src/main/java/co/cask/cdap/guides/cube/CubeWriterFlow.java
     ./src/main/java/co/cask/cdap/guides/cube/CubeWriterFlowlet.java
-    ./src/main/java/co/cask/cdap/guides/cube/CubeService.java
+    ./src/main/java/co/cask/cdap/guides/cube/WebAnalyticsApp.java
 
 The application is identified by the ``WebAnalyticsApp`` class. This class extends 
 `AbstractApplication <http://docs.cdap.io/cdap/current/en/reference-manual/javadocs/co/cask/cdap/api/app/AbstractApplication.html>`__,
@@ -97,7 +97,8 @@ and overrides the ``configure()`` method to define all of the application compon
     static final String APP_DESCRIPTION = "Data Analysis with an OLAP Cube";
     static final String STREAM_NAME = "weblogs";
     static final String CUBE_NAME = "weblogsCube";
-  
+    static final String SERVICE_NAME = "CubeService";
+    
     @Override
     public void configure() {
       setName(APP_NAME);
@@ -114,7 +115,7 @@ and overrides the ``configure()`` method to define all of the application compon
       createDataset(CUBE_NAME, Cube.class, props);
 
       addFlow(new CubeWriterFlow());
-      addService(new CubeService());
+      addService(SERVICE_NAME, new CubeHandler());
     }
   }
 
