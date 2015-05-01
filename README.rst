@@ -120,7 +120,7 @@ and overrides the ``configure()`` method to define all of the application compon
 First, we need a place to receive and process the events. CDAP provides a 
 `real-time stream processing system <http://docs.cdap.io/cdap/current/en/developers-manual/building-blocks/flows-flowlets/index.html>`__
 that is a great match for handling event streams. After first setting 
-the application name and description, our ``WebAnalyticsApp`` adds a new 
+the application name, our ``WebAnalyticsApp`` adds a new 
 `Stream <http://docs.cdap.io/cdap/current/en/developers-manual/building-blocks/streams.html>`__.
 
 Then, the application configures a Cube dataset to compute and store 
