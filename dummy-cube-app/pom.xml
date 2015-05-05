@@ -18,15 +18,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>co.cask.cdap.guides</groupId>
-  <artifactId>cdap-cube-guide</artifactId>
+  <groupId>co.cask.cdap</groupId>
+  <artifactId>cdap-cube-service</artifactId>
   <version>1.0.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>CDAP Cube Service App</name>
 
   <properties>
-    <app.main.class>co.cask.cdap.guides.cube.CubeServiceApp</app.main.class>
+    <app.main.class>co.cask.cdap.cube.CubeServiceApp</app.main.class>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <cdap.version>3.0.0-SNAPSHOT</cdap.version>
     <slf4j.version>1.7.5</slf4j.version>

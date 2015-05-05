@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Cask Data, Inc.
+ * Copyright © 2015 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -14,21 +14,22 @@
  * the License.
  */
 
-package co.cask.cdap.guides.cube;
+package co.cask.cdap.cube;
 
-import co.cask.cdap.api.annotation.UseDataSet;
-import co.cask.cdap.api.dataset.lib.cube.AbstractCubeHttpHandler;
+import co.cask.cdap.api.app.AbstractApplication;
 import co.cask.cdap.api.dataset.lib.cube.Cube;
 
 /**
- * {@link AbstractCubeHttpHandler} implementation that uses {@link CubeServiceApp#CUBE_NAME} dataset.
+ * An application that demonstrates real-time processing of Apache log entries, and storage using {@link Cube} dataset.
  */
-public final class CubeHandler extends AbstractCubeHttpHandler {
-  @UseDataSet(CubeServiceApp.CUBE_NAME)
-  private Cube cube;
+public class CubeServiceApp extends AbstractApplication {
+  static final String APP_NAME = "CubeServiceApp";
+  static final String CUBE_NAME = "AnalyticsCube";
+  static final String SERVICE_NAME = "CubeService";
 
   @Override
-  protected Cube getCube() {
-    return cube;
+  public void configure() {
+    setName(APP_NAME);
+    addService(SERVICE_NAME, new CubeHandler());
   }
 }
