@@ -53,7 +53,7 @@ public class LongRunningService extends AbstractService {
                         @PathParam("minutes") int minutes, @QueryParam("expected") long expected) {
       long currentTimeInMs = System.currentTimeMillis();
       long currentTime = TimeUnit.MILLISECONDS.toSeconds(currentTimeInMs);
-      long pastCutoffTime = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) - (minutes * 60);
+      long pastCutoffTime = currentTime - (minutes * 60);
 
       byte[] startRow = Bytes.toBytes(Long.MAX_VALUE - currentTime);
       byte[] endRow = Bytes.toBytes(Long.MAX_VALUE - pastCutoffTime);
@@ -92,17 +92,14 @@ public class LongRunningService extends AbstractService {
                                  @PathParam("timestamp") int timestamp) {
 
       long startTimeInMs = System.currentTimeMillis();
-
       byte[] rowKey = Bytes.toBytes(Long.MAX_VALUE - timestamp);
-
-      byte[] value = timeStampData.get(rowKey).get(column);
-
+      Row row = timeStampData.get(rowKey);
       long processed = 0;
-      if (value != null) {
-        processed = Bytes.toLong(value);
+
+      if (row != null && row.get(column) != null) {
+        processed = Bytes.toLong(row.get(column));
       }
 
-      // todo - do we need this ?
       if (processed == 0) {
         responder.sendError(500, "No records processed at " + timestamp);
         return;
@@ -140,8 +137,6 @@ public class LongRunningService extends AbstractService {
 
       metrics.gauge(metricsPrefix + "latency", latency);
       metrics.gauge(metricsPrefix + "delay", delay);
-
-      // todo: should we add the remaining (ie (minutes - lastProcessedTimestamp) * expected-tput) ?
       metrics.count(metricsPrefix + "requests", entriesProcessed);
       responder.sendJson(200, (Long.MAX_VALUE - lastProcessedTimestamp));
     }
