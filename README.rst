@@ -281,7 +281,8 @@ If you haven't already started a standalone CDAP installation, start it with the
 We can then deploy the application to a standalone CDAP installation and start ``CubeWriterFlow``
 and ``CubeService``::
 
-  $ cdap-cli.sh deploy app target/cdap-cube-guide-<version>.jar
+  $ cdap-cli.sh load artifact target/cdap-cube-guide-<version>.jar
+  $ cdap-cli.sh create app WebAnalyticsApp cdap-cube-guide <version> user
   $ cdap-cli.sh start flow WebAnalyticsApp.CubeWriterFlow
   $ cdap-cli.sh start service WebAnalyticsApp.CubeService
 
