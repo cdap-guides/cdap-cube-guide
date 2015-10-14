@@ -26,9 +26,8 @@ import co.cask.cdap.api.metrics.RuntimeMetrics;
 import co.cask.cdap.api.metrics.TagValue;
 import co.cask.cdap.test.ApplicationManager;
 import co.cask.cdap.test.FlowManager;
-import co.cask.cdap.test.RuntimeStats;
 import co.cask.cdap.test.ServiceManager;
-import co.cask.cdap.test.StreamWriter;
+import co.cask.cdap.test.StreamManager;
 import co.cask.cdap.test.TestBase;
 import co.cask.common.http.HttpRequest;
 import co.cask.common.http.HttpRequests;
@@ -60,29 +59,29 @@ public class WebAnalyticsAppTest extends TestBase {
     ApplicationManager appManager = deployApplication(WebAnalyticsApp.class);
 
     // Start the flow
-    FlowManager flowManager = appManager.startFlow(CubeWriterFlow.FLOW_NAME);
+    FlowManager flowManager = appManager.getFlowManager(CubeWriterFlow.FLOW_NAME).start();
     try {
       // Load some data for querying
-      StreamWriter streamWriter = appManager.getStreamWriter(WebAnalyticsApp.STREAM_NAME);
+      StreamManager streamManager = getStreamManager(WebAnalyticsApp.STREAM_NAME);
 
       long tsInSec =
         new SimpleDateFormat("dd/MMM/yyyy:hh:mm:ss Z").parse("08/Feb/2015:04:36:47 +0000").getTime() / 1000;
-      streamWriter.send("69.181.160.120 - - [08/Feb/2015:04:36:47 +0000] " +
+      streamManager.send("69.181.160.120 - - [08/Feb/2015:04:36:47 +0000] " +
                           "\"GET /rest/api/latest/server?_=1423341312520 HTTP/1.1\" 200 45 " +
                           "\"http://builds.cask.co/browse/COOP-DBT-284/log\" " +
                           "\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) " +
                           "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2125.122 Safari/537.36\"");
-      streamWriter.send("69.181.160.120 - - [08/Feb/2015:04:36:47 +0000] " +
+      streamManager.send("69.181.160.120 - - [08/Feb/2015:04:36:47 +0000] " +
                           "\"GET /rest/api/latest/server?_=1423341312520 HTTP/1.1\" 500 45 " +
                           "\"http://builds.cask.co/browse/COOP-DBT-284/log\" " +
                           "\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) " +
                           "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2125.122 Safari/537.36\"");
 
       // Wait until all stream events have been processed by the TrafficEventStore Flowlet
-      RuntimeMetrics metrics = RuntimeStats.getFlowletMetrics(WebAnalyticsApp.APP_NAME, CubeWriterFlow.FLOW_NAME, "writer");
+      RuntimeMetrics metrics = flowManager.getFlowletMetrics("writer");
       metrics.waitForProcessed(2, 7, TimeUnit.SECONDS);
 
-      ServiceManager serviceManager = appManager.startService(WebAnalyticsApp.SERVICE_NAME);
+      ServiceManager serviceManager = appManager.getServiceManager(WebAnalyticsApp.SERVICE_NAME).start();
       try {
         serviceManager.waitForStatus(true);
         URL url = serviceManager.getServiceURL();
