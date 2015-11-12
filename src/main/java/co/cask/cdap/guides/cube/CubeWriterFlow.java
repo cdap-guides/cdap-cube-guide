@@ -16,24 +16,19 @@
 
 package co.cask.cdap.guides.cube;
 
-import co.cask.cdap.api.flow.Flow;
-import co.cask.cdap.api.flow.FlowSpecification;
+import co.cask.cdap.api.flow.AbstractFlow;
 
 /**
  * Simple flow for parsing weblogs and writing them to a {@link co.cask.cdap.api.dataset.lib.cube.Cube}.
  */
-public class CubeWriterFlow implements Flow {
+public class CubeWriterFlow extends AbstractFlow {
   static final String FLOW_NAME = "CubeWriterFlow";
 
   @Override
-  public FlowSpecification configure() {
-    return FlowSpecification.Builder.with()
-      .setName(FLOW_NAME)
-      .setDescription("Reads logs from a Stream and writes them to a Cube dataset")
-      .withFlowlets()
-        .add("writer", new CubeWriterFlowlet())
-      .connect()
-        .fromStream(WebAnalyticsApp.STREAM_NAME).to("writer")
-      .build();
+  public void configure() {
+    setName(FLOW_NAME);
+    setDescription("Reads logs from a Stream and writes them to a Cube dataset");
+    addFlowlet("writer", new CubeWriterFlowlet());
+    connectStream(WebAnalyticsApp.STREAM_NAME, "writer");
   }
 }
