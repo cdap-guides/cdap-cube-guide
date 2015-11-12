@@ -162,19 +162,15 @@ CubeWriterFlow
 
 .. code:: java
 
-  public class CubeWriterFlow implements Flow {
+  public class CubeWriterFlow extends AbstractFlow {
     static final String FLOW_NAME = "CubeWriterFlow";
 
     @Override
-    public FlowSpecification configure() {
-      return FlowSpecification.Builder.with()
-        .setName(FLOW_NAME)
-        .setDescription("Reads logs from a Stream and writes them to a Cube dataset")
-        .withFlowlets()
-          .add("writer", new CubeWriterFlowlet())
-        .connect()
-          .fromStream(WebAnalyticsApp.STREAM_NAME).to("writer")
-        .build();
+    public void configure() {
+      setName(FLOW_NAME);
+      setDescription("Reads logs from a Stream and writes them to a Cube dataset");
+      addFlowlet("writer", new CubeWriterFlowlet());
+      connectStream(WebAnalyticsApp.STREAM_NAME, "writer");
     }
   }
 
