@@ -24,7 +24,7 @@ import co.cask.cdap.api.dataset.lib.cube.Cube;
  * {@link AbstractCubeHttpHandler} implementation that uses {@link WebAnalyticsApp#CUBE_NAME} dataset.
  */
 public final class CubeHandler extends AbstractCubeHttpHandler {
-  @UseDataSet(WebAnalyticsApp.CUBE_NAME)
+  @UseDataSet(WebAnalyticsApp.CUBE_NAME_2)
   private Cube cube;
 
   @Override
