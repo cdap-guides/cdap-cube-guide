@@ -20,7 +20,7 @@
 
   <groupId>co.cask.cdap.guides</groupId>
   <artifactId>cdap-cube-guide</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.0.0</version>
   <packaging>jar</packaging>
 
   <name>CDAP Cube Dataset Guide</name>
