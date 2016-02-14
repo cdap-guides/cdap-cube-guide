@@ -58,7 +58,7 @@ application over HTTP. There are a number of `tools
 <http://docs.cdap.io/cdap/current/en/developers-manual/ingesting-tools/index.html>`__ that
 can help you with the ingestion task. We’ll skip over the details of ingesting the data
 (as this is `covered elsewhere
-<http://docs.cask.io/cdap/current/en/examples-manual/index.html>`__) and instead focus on
+<http://docs.cdap.io/cdap/current/en/examples-manual/index.html>`__) and instead focus on
 storing and retrieving the data.
 
 The application consists of these components:
