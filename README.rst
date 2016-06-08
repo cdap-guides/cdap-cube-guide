@@ -562,14 +562,11 @@ We’d like the configuration changed to include these properties:
 .. code:: json
 
   {
-      "typeName":"co.cask.cdap.api.dataset.lib.cube.Cube",
-      "properties": {
-          "dataset.cube.resolutions":"1,60,3600",
-          "dataset.cube.aggregation.agg1.dimensions":"response_status",
-          "dataset.cube.aggregation.agg2.dimensions":"ip,browser",
-          "dataset.cube.aggregation.agg3.dimensions":"referrer",
-          "dataset.cube.aggregation.agg3.requiredDimensions":"referrer"
-      }
+      "dataset.cube.resolutions":"1,60,3600",
+      "dataset.cube.aggregation.agg1.dimensions":"response_status",
+      "dataset.cube.aggregation.agg2.dimensions":"ip,browser",
+      "dataset.cube.aggregation.agg3.dimensions":"referrer",
+      "dataset.cube.aggregation.agg3.requiredDimensions":"referrer"
   }
 
 We’ve added *agg3* that computes statistics for referrers. Note the extra property that ends 
