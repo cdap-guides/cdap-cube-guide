@@ -265,26 +265,26 @@ The ``WebAnalyticsApp`` application can be built and packaged using the Apache M
 
   $ mvn clean package
 
-Note that the remaining commands assume that the ``cdap-cli.sh`` script is
+Note that the remaining commands assume that the ``cdap`` script is
 available on your PATH. If that is not the case, please add it::
 
   $ export PATH=$PATH:<CDAP home>/bin
 
 If you haven't already started a standalone CDAP installation, start it with the command::
 
-  $ cdap.sh start
+  $ cdap sdk start
 
 We can then deploy the application to a standalone CDAP installation and start ``CubeWriterFlow``
 and ``CubeService``::
 
-  $ cdap-cli.sh load artifact target/cdap-cube-guide-<version>.jar
-  $ cdap-cli.sh create app WebAnalyticsApp cdap-cube-guide <version> user
-  $ cdap-cli.sh start flow WebAnalyticsApp.CubeWriterFlow
-  $ cdap-cli.sh start service WebAnalyticsApp.CubeService
+  $ cdap cli load artifact target/cdap-cube-guide-<version>.jar
+  $ cdap cli create app WebAnalyticsApp cdap-cube-guide <version> user
+  $ cdap cli start flow WebAnalyticsApp.CubeWriterFlow
+  $ cdap cli start service WebAnalyticsApp.CubeService
 
 Next, we will send some sample weblogs into the Stream for processing::
   
-  $ cdap-cli.sh load stream weblogs resources/accesslog.txt
+  $ cdap cli load stream weblogs resources/accesslog.txt
 
 As data is being processed, we can start querying it via a RESTful API
 provided by the ``CubeService``. For convenience, we’ve put the queries themselves
@@ -577,14 +577,14 @@ We don’t want to store extra aggregates in the fact where this is the case.
 Let’s update the dataset configuration, and then restart both the Flow and the Service so that the change takes effect::
 
   $ curl -w'\n' -X PUT -d @resources/cube-config.json 'http://localhost:10000/v3/namespaces/default/data/datasets/weblogsCube/properties'
-  $ cdap-cli.sh stop flow WebAnalyticsApp.CubeWriterFlow
-  $ cdap-cli.sh start flow WebAnalyticsApp.CubeWriterFlow
-  $ cdap-cli.sh stop service WebAnalyticsApp.CubeService
-  $ cdap-cli.sh start service WebAnalyticsApp.CubeService
+  $ cdap cli stop flow WebAnalyticsApp.CubeWriterFlow
+  $ cdap cli start flow WebAnalyticsApp.CubeWriterFlow
+  $ cdap cli stop service WebAnalyticsApp.CubeService
+  $ cdap cli start service WebAnalyticsApp.CubeService
 
 Let’s send additional data to compute new aggregations::
 
-  $ cdap-cli.sh load stream weblogs resources/accesslog.txt
+  $ cdap cli load stream weblogs resources/accesslog.txt
 
 Now, we can retrieve statistics on referrers using the newly-added aggregation:
 
@@ -635,7 +635,7 @@ Have a question? Discuss at the `CDAP User Mailing List <https://groups.google.c
 License
 =======
 
-Copyright © 2015 Cask Data, Inc.
+Copyright © 2015-2017 Cask Data, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
