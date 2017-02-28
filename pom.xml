@@ -28,7 +28,7 @@
   <properties>
     <app.main.class>co.cask.cdap.guides.cube.WebAnalyticsApp</app.main.class>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <cdap.version>4.1.0-SNAPSHOT</cdap.version>
+    <cdap.version>4.1.0</cdap.version>
     <slf4j.version>1.7.5</slf4j.version>
     <junit.version>4.11</junit.version>
   </properties>
