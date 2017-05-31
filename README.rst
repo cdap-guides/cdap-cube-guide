@@ -2,7 +2,7 @@
 Data Analysis with OLAP Cube
 ============================
 
-The `Cask Data Application Platform (CDAP) <http://cdap.io>`__ provides a number of
+The `Cask Data Application Platform (CDAP) <https://cask.co>`__ provides a number of
 pre-packaged Datasets, which make it easy to store and retrieve data using
 best-practices-based implementations of common data access patterns. In this guide, you
 will learn how to store multidimensional data points in a Cube dataset
@@ -16,22 +16,22 @@ What You Will Build
 ===================
 
 This guide will take you through building a simple `CDAP application
-<http://docs.cdap.io/cdap/current/en/developers-manual/building-blocks/applications.html>`__ 
+<https://docs.cask.co/cdap/current/en/developers-manual/building-blocks/applications.html>`__
 that ingests web logs, aggregates the request counts for different combinations of fields,
 and that can then be queried for the volume over a time period. You can then retrieve
 insights on the traffic of a web site and the web site’s health. You will:
 
 - Use a
-  `Stream <http://docs.cdap.io/cdap/current/en/developers-manual/building-blocks/streams.html>`__
+  `Stream <https://docs.cask.co/cdap/current/en/developers-manual/building-blocks/streams.html>`__
   to ingest real-time log data;
 - Build a
-  `Flow <http://docs.cdap.io/cdap/current/en/developers-manual/building-blocks/flows-flowlets/flows.html>`__
+  `Flow <https://docs.cask.co/cdap/current/en/developers-manual/building-blocks/flows-flowlets/flows.html>`__
   to process log entries as they are received into multidimensional facts;
 - Use a
-  `Dataset <http://docs.cdap.io/cdap/current/en/developers-manual/building-blocks/datasets/index.html>`__
+  `Dataset <https://docs.cask.co/cdap/current/en/developers-manual/building-blocks/datasets/index.html>`__
   to store the aggregated numbers; and
 - Build a
-  `Service <http://docs.cdap.io/cdap/current/en/developers-manual/building-blocks/services.html>`__
+  `Service <https://docs.cask.co/cdap/current/en/developers-manual/building-blocks/services.html>`__
   to query the aggregated data across multiple dimensions.
 
 What You Will Need
@@ -39,7 +39,7 @@ What You Will Need
 
 - `JDK 7 or 8 <http://www.oracle.com/technetwork/java/javase/downloads/index.html>`__
 - `Apache Maven 3.1+ <http://maven.apache.org/>`__
-- `CDAP SDK <http://docs.cdap.io/cdap/current/en/developers-manual/getting-started/standalone/index.html>`__
+- `CDAP Local Sandbox <https://docs.cask.co/cdap/current/en/developers-manual/getting-started/local-sandbox/index.html>`__
 
 Let’s Build It!
 ===============
@@ -55,10 +55,10 @@ Application Design
 For this guide we will assume we are processing logs of a web-site that are produced by an
 Apache web server. The data could be collected from multiple servers and then sent to our
 application over HTTP. There are a number of `tools
-<http://docs.cdap.io/cdap/current/en/developers-manual/ingesting-tools/index.html>`__ that
+<https://docs.cask.co/cdap/current/en/developers-manual/ingesting-tools/index.html>`__ that
 can help you with the ingestion task. We’ll skip over the details of ingesting the data
 (as this is `covered elsewhere
-<http://docs.cdap.io/cdap/current/en/examples-manual/index.html>`__) and instead focus on
+<https://docs.cask.co/cdap/current/en/examples-manual/index.html>`__) and instead focus on
 storing and retrieving the data.
 
 The application consists of these components:
@@ -67,17 +67,17 @@ The application consists of these components:
    :width: 8in
    :align: center
 
-Weblogs are sent to a ``weblogs`` Stream that is consumed by a ``CubeWriterFlow``. 
-The ``CubeWriterFlow`` has a single ``CubeWriterFlowlet`` that parses a ``StreamEvent``\’s 
-body into a ``CubeFact`` and writes it into a ``weblogsCube`` Dataset. The Dataset 
+Weblogs are sent to a ``weblogs`` Stream that is consumed by a ``CubeWriterFlow``.
+The ``CubeWriterFlow`` has a single ``CubeWriterFlowlet`` that parses a ``StreamEvent``\’s
+body into a ``CubeFact`` and writes it into a ``weblogsCube`` Dataset. The Dataset
 is configured to aggregate data for specific combinations of dimensions of a
-``CubeFact`` and provides a querying interface over the stored aggregations. 
-The application uses a ``CubeService`` to provide an HTTP interface for querying 
+``CubeFact`` and provides a querying interface over the stored aggregations.
+The application uses a ``CubeService`` to provide an HTTP interface for querying
 the ``weblogsCube``.
 
 Implementation
 --------------
-The first step is to set up our application structure. We will use a standard 
+The first step is to set up our application structure. We will use a standard
 Maven project structure for all of the source code files::
 
     ./pom.xml
@@ -86,8 +86,8 @@ Maven project structure for all of the source code files::
     ./src/main/java/co/cask/cdap/guides/cube/CubeWriterFlowlet.java
     ./src/main/java/co/cask/cdap/guides/cube/WebAnalyticsApp.java
 
-The application is identified by the ``WebAnalyticsApp`` class. This class extends 
-`AbstractApplication <http://docs.cdap.io/cdap/current/en/reference-manual/javadocs/co/cask/cdap/api/app/AbstractApplication.html>`__,
+The application is identified by the ``WebAnalyticsApp`` class. This class extends
+`AbstractApplication <https://docs.cask.co/cdap/current/en/reference-manual/javadocs/co/cask/cdap/api/app/AbstractApplication.html>`__,
 and overrides the ``configure()`` method to define all of the application components:
 
 .. code:: java
@@ -97,11 +97,11 @@ and overrides the ``configure()`` method to define all of the application compon
     static final String STREAM_NAME = "weblogs";
     static final String CUBE_NAME = "weblogsCube";
     static final String SERVICE_NAME = "CubeService";
-    
+
     @Override
     public void configure() {
       setName(APP_NAME);
-  
+
       addStream(new Stream(STREAM_NAME));
 
       // configure the Cube dataset
@@ -117,13 +117,13 @@ and overrides the ``configure()`` method to define all of the application compon
     }
   }
 
-First, we need a place to receive and process the events. CDAP provides a 
-`real-time stream processing system <http://docs.cdap.io/cdap/current/en/developers-manual/building-blocks/flows-flowlets/index.html>`__
-that is a great match for handling event streams. After first setting 
-the application name, our ``WebAnalyticsApp`` adds a new 
-`Stream <http://docs.cdap.io/cdap/current/en/developers-manual/building-blocks/streams.html>`__.
+First, we need a place to receive and process the events. CDAP provides a
+`real-time stream processing system <https://docs.cask.co/cdap/current/en/developers-manual/building-blocks/flows-flowlets/index.html>`__
+that is a great match for handling event streams. After first setting
+the application name, our ``WebAnalyticsApp`` adds a new
+`Stream <https://docs.cask.co/cdap/current/en/developers-manual/building-blocks/streams.html>`__.
 
-Then, the application configures a Cube dataset to compute and store 
+Then, the application configures a Cube dataset to compute and store
 aggregations for combinations of dimensions. Let’s take a closer
 look at the properties that are used to configure the Cube dataset:
 
@@ -133,19 +133,19 @@ look at the properties that are used to configure the Cube dataset:
     .add("dataset.cube.aggregation.agg1.dimensions", "response_status")
     .add("dataset.cube.aggregation.agg2.dimensions", "ip,browser")
 
-A Cube dataset can compute aggregates for multiple time resolutions to provide 
-a better view of data for both small and large time ranges. For example, you may want to see 
-data points for each second for the last five minutes, while to build a sensible 
-chart for a report that covers a week, you may need to see per-hour aggregations. 
+A Cube dataset can compute aggregates for multiple time resolutions to provide
+a better view of data for both small and large time ranges. For example, you may want to see
+data points for each second for the last five minutes, while to build a sensible
+chart for a report that covers a week, you may need to see per-hour aggregations.
 
-The code above defines three resolutions: 1 second, 1 minute (60 seconds), 
-and 1 hour (3600 seconds). When querying the Cube data, you can specify any of 
+The code above defines three resolutions: 1 second, 1 minute (60 seconds),
+and 1 hour (3600 seconds). When querying the Cube data, you can specify any of
 these three depending on your need.
 
 Each aggregation in a Cube is defined by a list of dimensions, which can later be used
-for querying. The above code defines two aggregations: “agg1” and agg2”. The first 
+for querying. The above code defines two aggregations: “agg1” and agg2”. The first
 has only one dimension: *response_status*. Thus, the Cube will allow queries such as
-“number of requests that had a response status 200” or “number of requests for 
+“number of requests that had a response status 200” or “number of requests for
 each response status”.
 
 The second aggregation (“agg2”) defines two dimensions: *ip* and *browser*, which allows
@@ -153,7 +153,7 @@ querying by ip, by browser, or by using both together, as we shall see below.
 
 After the Cube dataset is configured, the application adds a ``CubeWriterFlow`` to compute
 ``CubeFact``\ s from the ``StreamEvent``\ s and write them to the Cube, and a
-``CubeService`` that has a single handler that provides an HTTP API to query the Cube. 
+``CubeService`` that has a single handler that provides an HTTP API to query the Cube.
 
 Let’s take a closer look at these two.
 
@@ -236,7 +236,7 @@ of data sent.
 CubeService
 ...........
 
-The ``CubeService`` added to the Application is constructed using a single handler, 
+The ``CubeService`` added to the Application is constructed using a single handler,
 ``CubeHandler``:
 
 .. code:: java
@@ -252,9 +252,9 @@ The ``CubeService`` added to the Application is constructed using a single handl
   }
 
 
-The ``AbstractCubeHttpHandler`` that is provided out-of-the-box with CDAP handles basic 
+The ``AbstractCubeHttpHandler`` that is provided out-of-the-box with CDAP handles basic
 Cube methods, such as *add*, *searchDimensionValue*, *searchMeasure*, and *query*, while the subclass
-only needs to return the Cube dataset itself. Below, we will see how to use the HTTP 
+only needs to return the Cube dataset itself. Below, we will see how to use the HTTP
 interface of the Service.
 
 
@@ -270,21 +270,21 @@ available on your PATH. If that is not the case, please add it::
 
   $ export PATH=$PATH:<CDAP home>/bin
 
-If you haven't already started a standalone CDAP installation, start it with the command::
+If you haven't already started a CDAP Local Sandbox installation, start it with the command::
 
-  $ cdap.sh start
+  $ cdap sandbox start
 
-We can then deploy the application to a standalone CDAP installation and start ``CubeWriterFlow``
+We can then deploy the application to a CDAP Local Sandbox installation and start ``CubeWriterFlow``
 and ``CubeService``::
 
-  $ cdap-cli.sh load artifact target/cdap-cube-guide-<version>.jar
-  $ cdap-cli.sh create app WebAnalyticsApp cdap-cube-guide <version> user
-  $ cdap-cli.sh start flow WebAnalyticsApp.CubeWriterFlow
-  $ cdap-cli.sh start service WebAnalyticsApp.CubeService
+  $ cdap cli load artifact target/cdap-cube-guide-<version>.jar
+  $ cdap cli create app WebAnalyticsApp cdap-cube-guide <version> user
+  $ cdap cli start flow WebAnalyticsApp.CubeWriterFlow
+  $ cdap cli start service WebAnalyticsApp.CubeService
 
 Next, we will send some sample weblogs into the Stream for processing::
-  
-  $ cdap-cli.sh load stream weblogs resources/accesslog.txt
+
+  $ cdap cli load stream weblogs resources/accesslog.txt
 
 As data is being processed, we can start querying it via a RESTful API
 provided by the ``CubeService``. For convenience, we’ve put the queries themselves
@@ -293,8 +293,8 @@ into separate JSON files.
 Explore and Query Cube
 ----------------------
 
-Many times, users may not know what data a Cube contains and require some 
-exploration first to construct the queries themselves. Let’s start by searching 
+Many times, users may not know what data a Cube contains and require some
+exploration first to construct the queries themselves. Let’s start by searching
 for the dimension values that are available in the Cube with this ``CubeExploreQuery``:
 
 .. code:: json
@@ -309,7 +309,7 @@ for the dimension values that are available in the Cube with this ``CubeExploreQ
 
 Submit::
 
-  $ curl -w'\n' -X POST -d @resources/search-first.json 'http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/searchDimensionValue'
+  $ curl -w'\n' -X POST -d @resources/search-first.json 'http://localhost:11015/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/searchDimensionValue'
 
 The result will be the dimension values of the first dimensions defined in all aggregations (reformatted
 for readability):
@@ -353,7 +353,7 @@ To drill down further into the dimension hierarchy of aggregations, let’s refi
 
 Submit::
 
-  $ curl -w'\n' -X POST -d @resources/search-ip.json 'http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/searchDimensionValue'
+  $ curl -w'\n' -X POST -d @resources/search-ip.json 'http://localhost:11015/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/searchDimensionValue'
 
 The result is the dimension values of the next dimension defined in Cube aggregations:
 
@@ -368,7 +368,7 @@ The result is the dimension values of the next dimension defined in Cube aggrega
 
 The Cube search API allows you to query for available measures via the ``searchMeasure`` endpoint::
 
-  $ curl -w'\n' -X POST -d @resources/search-ip.json 'http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/searchMeasure'
+  $ curl -w'\n' -X POST -d @resources/search-ip.json 'http://localhost:11015/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/searchMeasure'
 
 The result contains all the measurement names:
 
@@ -408,7 +408,7 @@ One way of reading the query definition is this analogous SQL command:
 
 Submit::
 
-  $ curl -w'\n' -X POST -d @resources/query-ip-browser.json 'http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/query'
+  $ curl -w'\n' -X POST -d @resources/query-ip-browser.json 'http://localhost:11015/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/query'
 
 The result is a timeseries with one data point (if any are available) per hour:
 
@@ -474,7 +474,7 @@ The query below will help to analyse the number of errors (or invalid requests) 
 
 Submit::
 
-  $ curl -w'\n' -X POST -d @resources/query-response-status.json 'http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/query'
+  $ curl -w'\n' -X POST -d @resources/query-response-status.json 'http://localhost:11015/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/query'
 
 The result is a multiple timeseries for each response status:
 
@@ -554,7 +554,7 @@ Changing the Cube Configuration
 -------------------------------
 
 As applications evolve, we may need to change the Cube aggregation configuration to either
-support new queries or to optimize existing ones. Let’s see how you can add an 
+support new queries or to optimize existing ones. Let’s see how you can add an
 aggregation to an existing Cube.
 
 We’d like the configuration changed to include these properties:
@@ -569,14 +569,14 @@ We’d like the configuration changed to include these properties:
       "dataset.cube.aggregation.agg3.requiredDimensions":"referrer"
   }
 
-We’ve added *agg3* that computes statistics for referrers. Note the extra property that ends 
+We’ve added *agg3* that computes statistics for referrers. Note the extra property that ends
 with *requiredDimensions*: it specifies to only use this aggregation if the required dimension is present in a CubeFact.
-You may have noticed that in ``CubeWriterFlowlet``, the referrer field may be empty in a log entry. 
+You may have noticed that in ``CubeWriterFlowlet``, the referrer field may be empty in a log entry.
 We don’t want to store extra aggregates in the fact where this is the case.
 
 Let’s update the dataset configuration, and then restart both the Flow and the Service so that the change takes effect::
 
-  $ curl -w'\n' -X PUT -d @resources/cube-config.json 'http://localhost:10000/v3/namespaces/default/data/datasets/weblogsCube/properties'
+  $ curl -w'\n' -X PUT -d @resources/cube-config.json 'http://localhost:11015/v3/namespaces/default/data/datasets/weblogsCube/properties'
   $ cdap-cli.sh stop flow WebAnalyticsApp.CubeWriterFlow
   $ cdap-cli.sh start flow WebAnalyticsApp.CubeWriterFlow
   $ cdap-cli.sh stop service WebAnalyticsApp.CubeService
@@ -602,8 +602,8 @@ Now, we can retrieve statistics on referrers using the newly-added aggregation:
   }
 
 Submit::
-  
-  $ curl -w'\n' -X POST -d @resources/query-referrer.json 'http://localhost:10000/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/query'
+
+  $ curl -w'\n' -X POST -d @resources/query-referrer.json 'http://localhost:11015/v3/namespaces/default/apps/WebAnalyticsApp/services/CubeService/methods/query'
 
 Result:
 
@@ -635,7 +635,7 @@ Have a question? Discuss at the `CDAP User Mailing List <https://groups.google.c
 License
 =======
 
-Copyright © 2015 Cask Data, Inc.
+Copyright © 2015-2017 Cask Data, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
